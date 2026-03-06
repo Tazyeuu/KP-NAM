@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   get: ^4.6.6 # Manajemen State (Paling mudah)
+  provider: ^6.1.2
   dio: ^5.4.0 # Koneksi API
   geolocator: ^14.0.2 # GPS
   flutter_map: ^8.2.2 # Peta OpenStreetMap
