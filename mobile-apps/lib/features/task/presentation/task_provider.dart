@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -7,15 +5,14 @@ import '../domain/task_model.dart';
 
 class TaskProvider extends ChangeNotifier {
   static const double _maxDistanceMeters = 30;
-  static const double _earthRadiusMeters = 6371000;
 
   final List<TaskModel> taskList = [
     TaskModel(
       id: 'task-1',
-      title: 'Perbaikan Router',
-      roomName: 'IGD',
-      targetLat: -0.053421,
-      targetLng: 109.345678,
+      title: 'Test',
+      roomName: 'PotLuck',
+      targetLat: -0.024620,
+      targetLng: 109.338119,
     ),
     TaskModel(
       id: 'task-2',
@@ -82,7 +79,7 @@ class TaskProvider extends ChangeNotifier {
         ),
       );
 
-      final distance = _calculateDistanceMeters(
+      final distance = Geolocator.distanceBetween(
         position.latitude,
         position.longitude,
         task.targetLat,
@@ -136,27 +133,5 @@ class TaskProvider extends ChangeNotifier {
     if (changed) {
       notifyListeners();
     }
-  }
-
-  double _calculateDistanceMeters(
-    double startLatitude,
-    double startLongitude,
-    double endLatitude,
-    double endLongitude,
-  ) {
-    final dLat = _degToRad(endLatitude - startLatitude);
-    final dLon = _degToRad(endLongitude - startLongitude);
-    final lat1 = _degToRad(startLatitude);
-    final lat2 = _degToRad(endLatitude);
-
-    final a =
-        sin(dLat / 2) * sin(dLat / 2) +
-        cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
-    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return _earthRadiusMeters * c;
-  }
-
-  double _degToRad(double degrees) {
-    return degrees * (pi / 180);
   }
 }

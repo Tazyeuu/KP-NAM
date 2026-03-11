@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'features/task/presentation/task_list_page.dart';
+import 'features/auth/presentation/login_page.dart';
 import 'features/task/presentation/task_provider.dart';
 
 void main() {
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
           useMaterial3: true,
         ),
-        home: const TaskListPage(),
+        home: const LoginPage(),
       ),
     );
   }
