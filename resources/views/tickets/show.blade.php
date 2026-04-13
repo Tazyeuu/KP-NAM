@@ -1,0 +1,167 @@
+<x-app-layout>
+    <div class="py-8">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            
+            <a href="{{ route('dashboard') }}" class="text-sm text-gray-500 hover:text-blue-600 flex items-center gap-2 mb-6">
+                &larr; Kembali ke Dashboard
+            </a>
+
+            @if (session('success'))
+                <div class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 shadow-sm rounded-r-lg flex items-center gap-3">
+                    <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <div>
+                        <p class="font-bold text-sm">Berhasil!</p>
+                        <p class="text-xs">{{ session('success') }}</p>
+                    </div>
+                </div>
+            @endif
+
+            <div class="mb-8">
+                <p class="text-xs font-mono text-gray-400">#{{ strtoupper(substr($ticket->ticket_number, -6)) }}</p>
+                <h1 class="text-3xl font-bold text-gray-900 mt-1">{{ $ticket->subject }}</h1>
+                <div class="flex gap-2 mt-4">
+                    <span class="px-3 py-1 rounded-md text-xs font-bold uppercase {{ $ticket->status == 'Open' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700' }}">
+                        {{ $ticket->status }}
+                    </span>
+                    <span class="px-3 py-1 rounded-md text-xs font-bold bg-emerald-100 text-emerald-700">
+                        {{ $ticket->category->name }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="font-bold text-gray-800 mb-4">Deskripsi Kendala</h3>
+                        <p class="text-gray-600 leading-relaxed">{{ $ticket->description }}</p>
+                    </div>
+                    @role('admin')
+                    @if($ticket->status == 'Open')
+                        <div class="bg-white rounded-xl shadow-sm border-l-4 border-l-blue-500 border border-gray-100 p-6">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2 mb-6">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Tugaskan Teknisi
+                            </h3>
+                            
+                            <form action="{{ route('tickets.assign', $ticket) }}" method="POST" class="space-y-4">
+                                @csrf
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Pilih Teknisi</label>
+                                    <select name="teknisi_id" required class="w-full border-gray-200 rounded-lg text-sm focus:ring-blue-500">
+                                        <option value="">Pilih teknisi...</option>
+                                        @foreach($teknisi as $it)
+                                            <option value="{{ $it->id }}">{{ $it->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Catatan Admin</label>
+                                    <textarea name="note" rows="3" class="w-full border-gray-200 rounded-lg text-sm focus:ring-blue-500" placeholder="Tambahkan catatan untuk teknisi..."></textarea>
+                                </div>
+
+                                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-blue-100">
+                                    Tugaskan Teknisi
+                                </button>
+                            </form>
+                        </div>
+                    @elseif($ticket->status == 'Resolved')
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            
+                            <div class="p-6 bg-emerald-50 border-b border-emerald-100">
+                                <h3 class="font-bold text-emerald-800 flex items-center gap-2 mb-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Verifikasi Penyelesaian Tiket
+                                </h3>
+                            </div>
+
+                            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                
+                                <div class="border border-red-200 rounded-lg p-4 bg-red-50/30">
+                                    <h4 class="font-bold text-red-700 mb-3 flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Kendala Masih Ada
+                                    </h4>
+                                    <form action="{{ route('tickets.rework', $ticket) }}" method="POST" class="space-y-3">
+                                        @csrf
+                                        <textarea name="note" rows="3" required class="w-full border-red-200 rounded-md text-sm focus:ring-red-500 placeholder-red-300" placeholder="Jelaskan apa yang masih error agar teknisi tahu..."></textarea>
+                                        <button type="submit" class="w-full bg-white border border-red-500 text-red-600 hover:bg-red-50 font-bold py-2 rounded-md transition text-sm">
+                                            Kembalikan ke Teknisi
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div class="border border-emerald-200 rounded-lg p-4 bg-emerald-50/30">
+                                    <h4 class="font-bold text-emerald-700 mb-3 flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        Kendala Terselesaikan
+                                    </h4>
+                                    <form action="{{ route('tickets.close', $ticket) }}" method="POST" class="space-y-3">
+                                        @csrf
+                                        <textarea name="note" rows="3" class="w-full border-emerald-200 rounded-md text-sm focus:ring-emerald-500 placeholder-emerald-300" placeholder="Catatan penutupan tiket (opsional)..."></textarea>
+                                        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-md transition shadow-md shadow-emerald-100 text-sm">
+                                            Tutup Tiket
+                                        </button>
+                                    </form>
+                                </div>
+
+                            </div>
+                        </div>
+                    @endif
+                    @endrole
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
+                    <h3 class="font-bold text-gray-800 mb-6">Informasi Tiket</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start gap-4">
+                            <div class="text-gray-400 mt-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg></div>
+                            <div>
+                                <p class="text-xs text-gray-400">Pelapor</p>
+                                <p class="text-sm font-semibold text-gray-800">{{ $ticket->user->name }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="text-gray-400 mt-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg></div>
+                            <div>
+                                <p class="text-xs text-gray-400">Email</p>
+                                <p class="text-sm font-semibold text-gray-800">{{ $ticket->user->email }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="text-gray-400 mt-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
+                            <div>
+                                <p class="text-xs text-gray-400">Departemen</p>
+                                <p class="text-sm font-semibold text-gray-800">{{ $ticket->department->name }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="text-gray-400 mt-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg></div>
+                            <div>
+                                <p class="text-xs text-gray-400">Detail Lokasi</p>
+                                <p class="text-sm font-semibold text-gray-800">{{ $ticket->location_detail ?? '-' }}</p>
+                            </div>
+                        </div>
+
+                        <hr class="border-gray-100">
+
+                        <div class="flex items-start gap-4">
+                            <div class="text-gray-400 mt-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
+                            <div>
+                                <p class="text-xs text-gray-400">Tanggal Laporan</p>
+                                <p class="text-sm font-semibold text-gray-800">{{ $ticket->created_at->format('d M Y, H:i') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
