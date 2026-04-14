@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Tazyeuu/KP-NAM#readme",
   "dependencies": {
+    "@google/genai": "^1.49.0",
     "@google/generative-ai": "^0.24.1",
     "axios": "^1.13.6",
     "dotenv": "^17.3.1",

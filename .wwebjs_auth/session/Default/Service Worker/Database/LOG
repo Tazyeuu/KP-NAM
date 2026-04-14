@@ -1,3 +1,2 @@
-2026/03/11-14:33:36.755 2674 Reusing MANIFEST D:\Semester 6\Kerja Praktek\KP-NAM\.wwebjs_auth\session\Default\Service Worker\Database/MANIFEST-000001
-2026/03/11-14:33:36.757 2674 Recovering log #3
-2026/03/11-14:33:36.758 2674 Reusing old log D:\Semester 6\Kerja Praktek\KP-NAM\.wwebjs_auth\session\Default\Service Worker\Database/000003.log 
+2026/03/11-15:26:49.879 4ecc Creating DB D:\Semester 6\Kerja Praktek\KP-NAM\.wwebjs_auth\session\Default\Service Worker\Database since it was missing.
+2026/03/11-15:26:49.884 4ecc Reusing MANIFEST D:\Semester 6\Kerja Praktek\KP-NAM\.wwebjs_auth\session\Default\Service Worker\Database/MANIFEST-000001
