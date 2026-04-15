@@ -38,8 +38,8 @@
                         <h3 class="font-bold text-gray-800 mb-4">Deskripsi Kendala</h3>
                         <p class="text-gray-600 leading-relaxed">{{ $ticket->description }}</p>
                     </div>
-                    @role('admin')
-                    @if($ticket->status == 'Open')
+                    
+                    @if(Auth::user()->hasRole('admin') && $ticket->status == 'Open')
                         <div class="bg-white rounded-xl shadow-sm border-l-4 border-l-blue-500 border border-gray-100 p-6">
                             <h3 class="font-bold text-gray-800 flex items-center gap-2 mb-6">
                                 <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -49,7 +49,7 @@
                             <form action="{{ route('tickets.assign', $ticket) }}" method="POST" class="space-y-4">
                                 @csrf
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Pilih Teknisi</label>
+                                    <label class="block text-s font-bold text-gray-700 mb-1">Pilih Teknisi</label>
                                     <select name="teknisi_id" required class="w-full border-gray-200 rounded-lg text-sm focus:ring-blue-500">
                                         <option value="">Pilih teknisi...</option>
                                         @foreach($teknisi as $it)
@@ -59,7 +59,7 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Catatan Admin</label>
+                                    <label class="block text-s font-bold text-gray-700 mb-1">Catatan Admin</label>
                                     <textarea name="note" rows="3" class="w-full border-gray-200 rounded-lg text-sm focus:ring-blue-500" placeholder="Tambahkan catatan untuk teknisi..."></textarea>
                                 </div>
 
@@ -68,50 +68,76 @@
                                 </button>
                             </form>
                         </div>
-                    @elseif($ticket->status == 'Resolved')
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            
-                            <div class="p-6 bg-emerald-50 border-b border-emerald-100">
-                                <h3 class="font-bold text-emerald-800 flex items-center gap-2 mb-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    Verifikasi Penyelesaian Tiket
-                                </h3>
-                            </div>
-
-                            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                
-                                <div class="border border-red-200 rounded-lg p-4 bg-red-50/30">
-                                    <h4 class="font-bold text-red-700 mb-3 flex items-center gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        Kendala Masih Ada
-                                    </h4>
-                                    <form action="{{ route('tickets.rework', $ticket) }}" method="POST" class="space-y-3">
-                                        @csrf
-                                        <textarea name="note" rows="3" required class="w-full border-red-200 rounded-md text-sm focus:ring-red-500 placeholder-red-300" placeholder="Jelaskan apa yang masih error agar teknisi tahu..."></textarea>
-                                        <button type="submit" class="w-full bg-white border border-red-500 text-red-600 hover:bg-red-50 font-bold py-2 rounded-md transition text-sm">
-                                            Kembalikan ke Teknisi
-                                        </button>
-                                    </form>
-                                </div>
-
-                                <div class="border border-emerald-200 rounded-lg p-4 bg-emerald-50/30">
-                                    <h4 class="font-bold text-emerald-700 mb-3 flex items-center gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                        Kendala Terselesaikan
-                                    </h4>
-                                    <form action="{{ route('tickets.close', $ticket) }}" method="POST" class="space-y-3">
-                                        @csrf
-                                        <textarea name="note" rows="3" class="w-full border-emerald-200 rounded-md text-sm focus:ring-emerald-500 placeholder-emerald-300" placeholder="Catatan penutupan tiket (opsional)..."></textarea>
-                                        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-md transition shadow-md shadow-emerald-100 text-sm">
-                                            Tutup Tiket
-                                        </button>
-                                    </form>
-                                </div>
-
-                            </div>
+                    @elseif(Auth::user()->hasRole('user') && $ticket->status == 'Open')
+                        <div class="p-6 bg-blue-50 border-l-4 border-blue-400">
+                            <h3 class="font-bold text-blue-700">Tiket Dibuat</h3>
+                            <p class="text-sm text-blue-500">Tiket berhasil dibuat dan dikirim ke Tim IT. Menunggu penugasan Teknisi.</p>
                         </div>
                     @endif
-                    @endrole
+
+                    @if($ticket->status == 'In Progress')
+                        <div class="p-6 bg-blue-50 border-l-4 border-blue-400">
+                            <h3 class="font-bold text-blue-700">Sedang Dikerjakan</h3>
+                            <p class="text-sm text-blue-500">Teknisi telah ditugaskan. Saat ini teknisi sedang dalam proses perbaikan/pengecekan ke lokasi.</p>
+                        </div>
+                    @endif
+
+                    @if($ticket->status == 'Resolved')
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
+                            {{-- JIKA YANG LOGIN ADALAH PELAPOR (USER) DAN BELUM DIVERIFIKASI --}}
+                            @if(Auth::user()->hasRole('user') && !$ticket->is_verified)
+                                <div class="p-6 bg-yellow-50 border-b border-yellow-100">
+                                    <h3 class="font-bold text-yellow-800 flex items-center gap-2">Verifikasi Diperlukan</h3>
+                                    <p class="text-sm text-yellow-700 mt-1">Teknisi melaporkan kendala telah diatasi. Mohon periksa kembali. Apakah sistem/alat sudah berfungsi normal?</p>
+                                </div>
+                                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <form action="{{ route('tickets.rework', $ticket) }}" method="POST" class="space-y-3">
+                                        @csrf
+                                        <textarea name="note" rows="2" required class="w-full border-red-200 rounded-md text-sm" placeholder="Jelaskan apa yang masih error..."></textarea>
+                                        <button type="submit" class="w-full bg-white border border-red-500 text-red-600 hover:bg-red-50 font-bold py-2 rounded-md transition text-sm">Masih Error</button>
+                                    </form>
+                                    <form action="{{ route('tickets.verify', $ticket) }}" method="POST" class="flex flex-col justify-end">
+                                        @csrf
+                                        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-md transition text-sm h-[42px]">Ya, Masalah Selesai</button>
+                                    </form>
+                                </div>
+
+                            {{-- JIKA YANG LOGIN ADMIN --}}
+                            @elseif(Auth::user()->hasRole('admin'))
+                                
+                                @if(!$ticket->is_verified)
+                                    <div class="p-6 bg-gray-50 border-l-4 border-gray-400">
+                                        <h3 class="font-bold text-gray-700">Menunggu Verifikasi</h3>
+                                        <p class="text-sm text-gray-500">Tiket ini telah diselesaikan oleh Teknisi, namun belum diverifikasi oleh pelapor. TIket belum bisa ditutup.</p>
+                                    </div>
+                                @else
+                                    <div class="p-6 bg-emerald-50 border-l-4 border-emerald-500">
+                                        <h3 class="font-bold text-emerald-800 mb-2">Pelapor Telah Memverifikasi</h3>
+                                        <p class="text-sm text-emerald-700 mb-4">Pelapor mengonfirmasi bahwa kendala sudah teratasi. Tiket dapat ditutup.</p>
+                                        
+                                        <form action="{{ route('tickets.close', $ticket) }}" method="POST">
+                                            @csrf
+                                            <textarea name="note" rows="2" class="w-full border-emerald-200 rounded-md text-sm mb-3" placeholder="Catatan penutupan (opsional)..."></textarea>
+                                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-md transition">Tutup Tiket</button>
+                                        </form>
+                                    </div>
+                                @endif
+
+                            {{-- JIKA YANG LOGIN PELAPOR, TAPI SUDAH DIVERIFIKASI --}}
+                            @elseif(Auth::user()->hasRole('user') && $ticket->is_verified)
+                                <div class="p-6 bg-blue-50 border-l-4 border-blue-400">
+                                    <p class="text-sm text-blue-700 font-semibold">Masalah terselesaikan. Anda telah memverifikasi penyelesaian tiket ini.</p>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                    @if($ticket->status == 'Closed')
+                        <div class="p-6 bg-gray-50 border-l-4 border-gray-400">
+                            <h3 class="font-bold text-gray-700">Tiket Ditutup</h3>
+                            <p class="text-sm text-gray-500">Tiket ini telah ditutup.</p>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
@@ -149,8 +175,6 @@
                                 <p class="text-sm font-semibold text-gray-800">{{ $ticket->location_detail ?? '-' }}</p>
                             </div>
                         </div>
-
-                        <hr class="border-gray-100">
 
                         <div class="flex items-start gap-4">
                             <div class="text-gray-400 mt-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>

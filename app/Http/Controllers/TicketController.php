@@ -33,35 +33,31 @@ class TicketController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, Ticket $ticket)
     {
-        // 1. Validasi input dari user
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'subject' => 'required|string|max:255',
             'description' => 'required|string',
             'location_detail' => 'nullable|string|max:255',
             'priority' => 'required|in:Low,Medium,High',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Maksimal 2MB
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        // 2. Proses upload gambar (jika ada)
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('tickets', 'public');
         }
 
-        // 3. Generate Nomor Tiket Otomatis (Format: TKT-YYYYMMDD-0001)
         $today = now()->format('Ymd');
         $countToday = Ticket::whereDate('created_at', now()->toDateString())->count();
         $ticketNumber = 'TKT-' . $today . '-' . str_pad($countToday + 1, 4, '0', STR_PAD_LEFT);
 
-        // 4. Simpan ke Database
         Ticket::create([
             'ticket_number' => $ticketNumber,
             'user_id' => Auth::id(),
             'category_id' => $request->category_id,
-            'department_id' => Auth::user()->department_id, // Ambil otomatis dari profil user
+            'department_id' => Auth::user()->department_id,
             'location_detail' => $request->location_detail,
             'subject' => $request->subject,
             'description' => $request->description,
@@ -70,7 +66,6 @@ class TicketController extends Controller
             'status' => 'Open',
         ]);
 
-        // 5. Kembalikan user ke dashboard dengan pesan sukses
         return redirect()->route('dashboard')->with('success', 'Tiket pelaporan berhasil dikirim ke Tim IT!');
     }
 
@@ -97,8 +92,15 @@ class TicketController extends Controller
         // 2. Catat penugasan di tabel assignments
         $ticket->assignments()->create([
             'teknisi_id' => $request->teknisi_id,
-            'note' => $request->note,
+            'note' => $request->note ?? 'Teknisi ditugaskan oleh Admin.',
             'assigned_at' => now(),
+        ]);
+
+        TicketLog::create([
+            'ticket_id' => $ticket->id,
+            'changed_by' => Auth::id(),
+            'status_to' => 'In Progress',
+            'note' => 'Teknisi ditugaskan oleh Admin.'
         ]);
 
         // 3. KIRIM TUGAS KE APLIKASI MOBILE (Proyek Temanmu)
@@ -120,19 +122,36 @@ class TicketController extends Controller
         return redirect()->back()->with('success', 'Teknisi berhasil ditugaskan.');
     }
 
+    public function verify(Ticket $ticket)
+    {
+        $ticket->update(['is_verified' => true]);
+
+        TicketLog::create([
+            'ticket_id' => $ticket->id,
+            'changed_by' => Auth::id(),
+            'status_to' => 'Resolved',
+            'note' => 'Tiket diverifikasi dan masalah terselesaikan.'
+        ]);
+
+        return redirect()->back()->with('success', 'Tiket berhasil diverifikasi.');
+    }
+
     public function rework(Request $request, Ticket $ticket)
     {
         $request->validate([
             'note' => 'required|string'
         ]);
 
-        $ticket->update(['status' => 'In Progress']);
+        $ticket->update([
+            'status' => 'In Progress',
+            'is_verified' => false
+        ]);
 
         TicketLog::create([
             'ticket_id' => $ticket->id,
             'changed_by' => Auth::id(),
             'status_to' => 'In Progress',
-            'note' => 'Masalah: ' . $request->note,
+            'note' => 'Pelapor: ' . $request->note,
         ]);
 
         /* try {
@@ -158,7 +177,7 @@ class TicketController extends Controller
             'ticket_id' => $ticket->id,
             'changed_by' => Auth::id(),
             'status_to' => 'Closed',
-            'note' => $request->note ?? 'Tiket ditutup oleh Admin tanpa catatan.',
+            'note' => $request->note ?? 'Tiket ditutup oleh Admin.',
         ]);
 
         return redirect()->back()->with('success', 'Tiket berhasil ditutup.');

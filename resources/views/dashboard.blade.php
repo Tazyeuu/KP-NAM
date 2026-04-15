@@ -94,14 +94,13 @@
                                 <p class="text-sm text-gray-500 mb-4 line-clamp-2">{{ $ticket->description }}</p>
                                 
                                 <div class="flex gap-2 mb-4">
-                                    <span class="bg-indigo-50 text-indigo-600 border border-indigo-100 text-xs px-2 py-1 rounded">💻 {{ $ticket->category->name }}</span>
+                                    <span class="bg-indigo-50 text-indigo-600 border border-indigo-100 text-xs px-2 py-1 rounded">{{ $ticket->category->name }}</span>
                                     {{-- Logika Warna Badge Prioritas --}}
                                     @php
                                         $priorityColor = match($ticket->priority) {
                                             'High' => 'bg-red-50 text-red-600 border-red-100',
                                             'Medium' => 'bg-orange-50 text-orange-600 border-orange-100',
                                             'Low' => 'bg-slate-50 text-slate-600 border-slate-100',
-                                            default => 'bg-gray-50 text-gray-600 border-gray-100',
                                         };
                                     @endphp
                                     <span class="{{ $priorityColor }} border text-xs px-2 py-1 rounded">
@@ -111,8 +110,8 @@
                                 
                                 <div class="flex justify-between items-center text-xs text-gray-400 mt-4 pt-4 border-t border-gray-100">
                                     <div class="flex items-center gap-3">
-                                        <span class="flex items-center gap-1">>👤 {{ $ticket->user->name }}</span>
-                                        <span class="flex items-center gap-1">>🏥 {{ $ticket->department->name }}</span>
+                                        <span class="flex items-center gap-1">{{ $ticket->user->name }}</span>
+                                        <span class="flex items-center gap-1">{{ $ticket->department->name }}</span>
                                     </div>
                                     <span class="flex items-center gap-1">{{ $ticket->created_at->format('d M Y, H:i') }}</span>
                                 </div>
@@ -136,7 +135,7 @@
                         <div class="bg-green-50/30 border border-green-100 rounded-xl p-5 shadow-sm">
                             <div class="flex justify-between items-start mb-2">
                                 <span class="text-xs text-gray-400 font-mono">{{ $ticket->ticket_number }}</span>
-                                <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold">✓ SELESAI</span>
+                                <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-bold">{{ $ticket->status }}</span>
                             </div>
                             <h3 class="font-bold text-gray-800">{{ $ticket->subject }}</h3>
                             <p class="text-xs text-gray-500 mt-2">Pelapor: {{ $ticket->user->name }} ({{ $ticket->department->name }})</p>
@@ -149,7 +148,7 @@
             @else
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 text-gray-900">
-                        Selamat datang, {{ Auth::user()->name }}! ({{ Auth::user()->department?->name ?? 'Ruangan Belum Diatur' }})
+                        Selamat datang, {{ Auth::user()->name }}! ({{ Auth::user()->department?->name }})
 
                         <div class="mt-6">
                             <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-4">

@@ -9,7 +9,7 @@ class Ticket extends Model
     protected $fillable = [
         'ticket_number', 'user_id', 'category_id', 'department_id', 
         'location_detail', 'subject', 'description', 'image_path', 
-        'priority', 'status'
+        'priority', 'status', 'is_verified'
     ];
 
     public function user() { return $this->belongsTo(User::class); }

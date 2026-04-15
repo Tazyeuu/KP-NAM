@@ -54,7 +54,7 @@
                                     <td class="px-6 py-4">
                                         <div class="text-sm font-bold text-gray-900 line-clamp-1">{{ $ticket->subject }}</div>
                                         <div class="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                                            <span class="px-2 py-0.5 bg-gray-100 rounded text-gray-600 font-medium">💻 {{ $ticket->category->name }}</span>
+                                            <span class="px-2 py-0.5 bg-gray-100 rounded text-gray-600 font-medium">{{ $ticket->category->name }}</span>
                                         </div>
                                     </td>
                                     

@@ -47,10 +47,9 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 3. Buat Data Kategori Kendala IT
-        Category::create(['name' => 'Jaringan / Internet (WiFi/LAN)']);
-        Category::create(['name' => 'Hardware (PC/Printer Rusak)']);
-        Category::create(['name' => 'Software / SIMRS Error']);
-        Category::create(['name' => 'Lainnya']);
+        Category::create(['name' => 'Jaringan']);
+        Category::create(['name' => 'Hardware']);
+        Category::create(['name' => 'Software']);
 
         // 4. Buat Akun Admin (Tim IT)
         $admin = User::create([

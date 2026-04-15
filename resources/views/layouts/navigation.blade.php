@@ -15,15 +15,17 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
                     @role('admin')
-                    <x-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.index')">
-                        {{ __('Antrean Tiket') }}
-                    </x-nav-link>
+                        <x-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.index')">
+                            {{ __('Antrean Tiket') }}
+                        </x-nav-link>
                     @endrole
+
                     @role('user')
-                    <x-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.index')">
-                        {{ __('Histori Pelaporan') }}
-                    </x-nav-link>
+                        <x-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.index')">
+                            {{ __('Histori Pelaporan') }}
+                        </x-nav-link>
                     @endrole
                 </div>
             </div>

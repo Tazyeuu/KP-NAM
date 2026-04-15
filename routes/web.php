@@ -24,12 +24,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
     // Rute untuk melihat daftar tiket (baik untuk histori user maupun antrean admin)
     Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
-    
     // Rute untuk melihat detail 1 tiket
     Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
-    Route::post('/tickets/{ticket}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
-    Route::post('/tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
+
+    Route::post('/tickets/{ticket}/verify', [TicketController::class, 'verify'])->name('tickets.verify');
     Route::post('/tickets/{ticket}/rework', [TicketController::class, 'rework'])->name('tickets.rework');
+
+    Route::middleware(['role:admin'])->group(function () {
+            Route::post('/tickets/{ticket}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
+            Route::post('/tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
+    });
 });
 
 require __DIR__.'/auth.php';
