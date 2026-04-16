@@ -27,7 +27,7 @@ class DashboardController extends Controller
             ));
         }
 
-        if ($user->hasRole('teknisi')) {
+        elseif ($user->hasRole('teknisi')) {
             // Logika Teknisi: Hanya melihat tiket yang SUDAH SELESAI dan DITUGASKAN ke dia
             $completedTickets = Ticket::whereHas('assignments', function($query) use ($user) {
                 $query->where('teknisi_id', $user->id);
@@ -40,7 +40,14 @@ class DashboardController extends Controller
             return view('dashboard', compact('completedTickets'));
         }
 
-        // Jika yang login adalah user/staf biasa, kembalikan tampilan tanpa data admin
-        return view('dashboard');
+        else {
+            $userTickets = Ticket::where('user_id', $user->id)
+                                ->with('category')
+                                ->latest()
+                                ->take(3) 
+                                ->get();
+
+            return view('dashboard', compact('userTickets'));
+        }
     }
 }

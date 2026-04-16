@@ -17,7 +17,7 @@ class TicketController extends Controller
      */
     public function index()
     {
-        $tickets = Ticket::all();
+        $tickets = Ticket::latest()->get()->all();
         return view('tickets.index', compact('tickets'));;
     }
 
@@ -39,15 +39,9 @@ class TicketController extends Controller
             'category_id' => 'required|exists:categories,id',
             'subject' => 'required|string|max:255',
             'description' => 'required|string',
-            'location_detail' => 'nullable|string|max:255',
+            'location_detail' => 'required|string|max:255',
             'priority' => 'required|in:Low,Medium,High',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
-
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('tickets', 'public');
-        }
 
         $today = now()->format('Ymd');
         $countToday = Ticket::whereDate('created_at', now()->toDateString())->count();
@@ -62,7 +56,6 @@ class TicketController extends Controller
             'subject' => $request->subject,
             'description' => $request->description,
             'priority' => $request->priority,
-            'image_path' => $imagePath,
             'status' => 'Open',
         ]);
 
@@ -100,7 +93,7 @@ class TicketController extends Controller
             'ticket_id' => $ticket->id,
             'changed_by' => Auth::id(),
             'status_to' => 'In Progress',
-            'note' => 'Teknisi ditugaskan oleh Admin.'
+            'note' => $request->note ?? 'Teknisi ditugaskan oleh Admin.'
         ]);
 
         // 3. KIRIM TUGAS KE APLIKASI MOBILE (Proyek Temanmu)
@@ -142,9 +135,17 @@ class TicketController extends Controller
             'note' => 'required|string'
         ]);
 
+        $lastAssignment = $ticket->assignments()->latest()->first();
+
         $ticket->update([
             'status' => 'In Progress',
             'is_verified' => false
+        ]);
+
+        $ticket->assignments()->create([
+            'teknisi_id' => $lastAssignment->teknisi_id,
+            'note' => 'Pelapor: ' . $request->note, 
+            'assigned_at' => now(),
         ]);
 
         TicketLog::create([

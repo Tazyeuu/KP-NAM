@@ -23,8 +23,11 @@
                     @endrole
 
                     @role('user')
+                        <x-nav-link :href="route('tickets.create')" :active="request()->routeIs('tickets.create')">
+                            {{ __('Buat Tiket') }}
+                        </x-nav-link>
                         <x-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.index')">
-                            {{ __('Histori Pelaporan') }}
+                            {{ __('Histori Laporan') }}
                         </x-nav-link>
                     @endrole
                 </div>

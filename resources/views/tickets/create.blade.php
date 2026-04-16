@@ -42,15 +42,9 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Detail Lokasi (Opsional)</label>
-                                <input type="text" name="location_detail" placeholder="Misal: Meja Pendaftaran 2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                <label class="block text-sm font-medium text-gray-700">Detail Lokasi</label>
+                                <input type="text" name="location_detail" required placeholder="Misal: Lantai 2 No. 1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                             </div>
-                        </div>
-
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700">Unggah Foto Kendala (Opsional)</label>
-                            <input type="file" name="image" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                            <p class="mt-1 text-xs text-gray-500">Maksimal 2MB. Format: JPG, PNG.</p>
                         </div>
 
                         <div class="flex justify-end">

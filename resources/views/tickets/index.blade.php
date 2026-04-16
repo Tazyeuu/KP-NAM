@@ -4,8 +4,8 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 @role('admin')
                     {{ __('Semua Antrean Tiket') }}
-                @else
-                    {{ __('Histori Laporan Saya') }}
+                @elserole('user')
+                    {{ __('Histori Laporan') }}
                 @endrole
             </h2>
             

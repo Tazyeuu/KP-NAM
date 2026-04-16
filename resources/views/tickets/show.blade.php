@@ -80,6 +80,29 @@
                             <h3 class="font-bold text-blue-700">Sedang Dikerjakan</h3>
                             <p class="text-sm text-blue-500">Teknisi telah ditugaskan. Saat ini teknisi sedang dalam proses perbaikan/pengecekan ke lokasi.</p>
                         </div>
+
+                        @php
+                            $assignment = $ticket->assignments->last();
+                        @endphp
+                        
+                        <div class="bg-white/60 rounded-lg p-4 border border-blue-100 space-y-3 text-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+                                <span class="text-blue-600 font-semibold">Teknisi Bertugas</span>
+                                <span class="md:col-span-2 text-gray-800 font-medium">: {{ $assignment->teknisi->name }}</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+                                <span class="text-blue-600 font-semibold">Waktu Ditugaskan</span>
+                                <span class="md:col-span-2 text-gray-800">: {{ Carbon\Carbon::parse($assignment->assigned_at)->format('d M Y, H:i') }} WIB</span>
+                            </div>
+
+                            @if($assignment->note)
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-1 border-t border-blue-100 pt-2 mt-2">
+                                    <span class="text-blue-600 font-semibold">Instruksi / Catatan</span>
+                                    <span class="md:col-span-2 text-gray-700">: "{{ $assignment->note }}"</span>
+                                </div>
+                            @endif
+                        </div>
                     @endif
 
                     @if($ticket->status == 'Resolved')
@@ -126,7 +149,8 @@
                             {{-- JIKA YANG LOGIN PELAPOR, TAPI SUDAH DIVERIFIKASI --}}
                             @elseif(Auth::user()->hasRole('user') && $ticket->is_verified)
                                 <div class="p-6 bg-blue-50 border-l-4 border-blue-400">
-                                    <p class="text-sm text-blue-700 font-semibold">Masalah terselesaikan. Anda telah memverifikasi penyelesaian tiket ini.</p>
+                                    <h3 class="font-bold text-blue-700">Masalah Terselesaikan</h3>
+                                    <p class="text-sm text-blue-500 font-semibold">Anda telah memverifikasi penyelesaian tiket ini.</p>
                                 </div>
                             @endif
                         </div>
@@ -172,7 +196,7 @@
                             <div class="text-gray-400 mt-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg></div>
                             <div>
                                 <p class="text-xs text-gray-400">Detail Lokasi</p>
-                                <p class="text-sm font-semibold text-gray-800">{{ $ticket->location_detail ?? '-' }}</p>
+                                <p class="text-sm font-semibold text-gray-800">{{ $ticket->location_detail }}</p>
                             </div>
                         </div>
 

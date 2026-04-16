@@ -8,7 +8,7 @@ class Ticket extends Model
 {
     protected $fillable = [
         'ticket_number', 'user_id', 'category_id', 'department_id', 
-        'location_detail', 'subject', 'description', 'image_path', 
+        'location_detail', 'subject', 'description', 
         'priority', 'status', 'is_verified'
     ];
 

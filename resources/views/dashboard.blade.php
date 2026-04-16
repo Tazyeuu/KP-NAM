@@ -139,31 +139,198 @@
                             </div>
                             <h3 class="font-bold text-gray-800">{{ $ticket->subject }}</h3>
                             <p class="text-xs text-gray-500 mt-2">Pelapor: {{ $ticket->user->name }} ({{ $ticket->department->name }})</p>
-                            <p class="text-xs text-gray-400 mt-1">Selesai pada: {{ $ticket->updated_at->format('d M Y') }}</p>
+                            <p class="text-xs text-gray-400 mt-1">Selesai pada: {{ $ticket->updated_at->format('d M Y, H:i') }}</p>
                         </div>
                     @empty
                         <p class="text-gray-500 italic">Belum ada tugas yang diselesaikan di sistem web ini.</p>
                     @endforelse
                 </div>
             @else
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                    <div class="p-6 text-gray-900">
-                        Selamat datang, {{ Auth::user()->name }}! ({{ Auth::user()->department?->name }})
+                <x-slot name="header">
+                    <div class="flex justify-between items-center">
+                        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Dashboard</h2>
+                    </div>
+                </x-slot>
 
-                        <div class="mt-6">
-                            <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
-                                <h3 class="text-lg font-bold text-green-800">Panel Pelaporan</h3>
-                                <p class="text-sm text-green-600">Buat laporan jika ada kendala IT di ruangan Anda.</p>
-                            </div>
-                            <a href="{{ route('tickets.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    
+                    <div class="md:col-span-2 bg-gradient-to-br from-blue-600 to-indigo-800 rounded-2xl shadow-md p-8 text-white relative overflow-hidden">
+                        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
+                        
+                        <h2 class="text-3xl font-bold mb-2 relative z-10">Selamat datang, {{ Auth::user()->name }}!</h2>
+                        <p class="text-blue-100 text-sm mb-6 flex items-center gap-2 relative z-10">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            {{ Auth::user()->department->name }}
+                        </p>
+
+                        <p class="mb-8 text-sm leading-relaxed text-blue-50 relative z-10 max-w-xl">
+                            Sistem Informasi Manajemen Layanan IT (ITSM) RSUD dr. Soedarso hadir untuk membantu kelancaran tugas Anda. Jika Anda mengalami kendala perangkat, jaringan, SIMRS, atau fasilitas IT lainnya, silakan laporkan di sini.
+                        </p>
+
+                        <div class="flex flex-wrap gap-3 relative z-10">
+                            <a href="{{ route('tickets.create') }}" class="bg-white text-blue-700 px-6 py-3 rounded-lg font-bold text-sm shadow-lg hover:bg-gray-50 transition transform hover:-translate-y-0.5">
                                 + Buat Tiket Baru
                             </a>
-                            <a href="{{ route('tickets.index') }}" class="ml-2 text-sm text-gray-600 hover:text-gray-900 underline">
-                                Lihat Histori Laporan Saya
+                            <a href="{{ route('tickets.index') }}" class="bg-blue-800/40 text-white border border-blue-400/30 px-6 py-3 rounded-lg font-semibold text-sm hover:bg-blue-800/60 transition backdrop-blur-sm">
+                                Lihat Histori Laporan
                             </a>
                         </div>
                     </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="font-bold text-gray-800 border-b border-gray-100 pb-3 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+                            Informasi Layanan
+                        </h3>
+                        <ul class="space-y-4 text-sm text-gray-600">
+                            <li class="flex items-start gap-3">
+                                <div class="bg-blue-50 p-2 rounded-lg text-blue-600 mt-0.5">⏱️</div>
+                                <span>Layanan operasional IT memprioritaskan penanganan darurat untuk area Kritis (IGD/ICU).</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div class="bg-green-50 p-2 rounded-lg text-green-600 mt-0.5">💡</div>
+                                <span>Coba <em>restart</em> perangkat (PC/Printer) Anda sebelum memutuskan untuk membuat tiket laporan.</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div class="bg-indigo-50 p-2 rounded-lg text-indigo-600 mt-0.5">🤖</div>
+                                <span>Gunakan <strong>Asisten IT AI</strong> di pojok kanan bawah untuk mendapat solusi instan.</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+                    <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <h3 class="font-bold text-gray-800 flex items-center gap-2">Laporan Terbaru Anda</h3>
+                        <a href="{{ route('tickets.index') }}" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition flex items-center gap-1">
+                            Lihat Semua <span aria-hidden="true">&rarr;</span>
+                        </a>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-white">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">No. Tiket</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Subjek & Kategori</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-50">
+                                @forelse($userTickets as $ticket)
+                                    <tr class="hover:bg-blue-50 cursor-pointer transition duration-150" onclick="window.location='{{ route('tickets.show', $ticket->id) }}'">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="text-sm font-mono font-semibold text-blue-600">{{ $ticket->ticket_number }}</span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900">{{ $ticket->created_at->format('d M Y') }}</div>
+                                            <div class="text-xs text-gray-400">{{ $ticket->created_at->format('H:i') }} WIB</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-bold text-gray-900 line-clamp-1">{{ $ticket->subject }}</div>
+                                            <div class="text-xs text-gray-500 mt-1">{{ $ticket->category->name }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            @php
+                                                $statusBadge = match($ticket->status) {
+                                                    'Open' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                                                    'In Progress' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                                    'Resolved' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                                                    'Closed' => 'bg-gray-100 text-gray-700 border-gray-200',
+                                                    default => 'bg-gray-100 text-gray-700',
+                                                };
+                                            @endphp
+                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-md border uppercase {{ $statusBadge }}">
+                                                {{ $ticket->status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-12 text-center">
+                                            <div class="flex flex-col items-center justify-center text-gray-400">
+                                                <svg class="w-10 h-10 mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                <p class="text-sm font-medium">Anda belum pernah membuat tiket laporan.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="chatbot-container" class="fixed bottom-6 right-6 z-50 font-sans">
+                    
+                    <div id="chat-window" class="hidden flex-col w-80 sm:w-96 h-[450px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden transition-all duration-300 transform origin-bottom-right mb-4">
+                        
+                        <div class="bg-indigo-600 p-4 text-white flex justify-between items-center shadow-md z-10">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl">🤖</div>
+                                <div>
+                                    <h4 class="font-bold text-sm">Asisten IT Soedarso</h4>
+                                    <p class="text-[10px] text-indigo-200 flex items-center gap-1">
+                                        <span class="w-2 h-2 bg-green-400 rounded-full inline-block animate-pulse"></span>
+                                        Siap membantu
+                                    </p>
+                                </div>
+                            </div>
+                            <button id="close-chat" class="text-white hover:text-indigo-200 focus:outline-none transition transform hover:rotate-90">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+
+                        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto bg-slate-50 space-y-4">
+                            <div class="flex justify-start">
+                                <div class="bg-white border border-gray-100 text-gray-700 text-sm p-3 rounded-2xl rounded-tl-sm max-w-[85%] shadow-sm">
+                                    Halo, {{ Auth::user()->name }}! Saya Asisten AI IT RSUD. 🏥<br><br>
+                                    Ada kendala seputar Printer, Jaringan, atau SIMRS yang bisa saya bantu selesaikan sebelum Anda memanggil teknisi?
+                                </div>
+                            </div>
+                            
+                            </div>
+
+                        <div class="p-3 bg-white border-t border-gray-100">
+                            <form id="chat-form" class="flex gap-2 items-center" onsubmit="event.preventDefault(); /* Integrasi API temanmu taruh di sini nanti */">
+                                <input type="text" id="chat-input" class="w-full bg-gray-100 border-transparent focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-full text-sm px-4 py-2.5 transition" placeholder="Ketik kendala Anda di sini...">
+                                <button type="submit" class="bg-indigo-600 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-indigo-700 flex-shrink-0 transition shadow-md">
+                                    <svg class="w-4 h-4 transform rotate-45 -mt-0.5 -ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <button id="chat-toggle" class="w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center ml-auto relative group">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                        
+                        <span class="absolute -top-10 right-0 bg-gray-800 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                            Tanya Asisten AI
+                        </span>
+                    </button>
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const chatToggle = document.getElementById('chat-toggle');
+                        const chatWindow = document.getElementById('chat-window');
+                        const closeChat = document.getElementById('close-chat');
+
+                        // Logika Buka Chat
+                        chatToggle.addEventListener('click', () => {
+                            chatWindow.classList.remove('hidden');
+                            chatWindow.classList.add('flex');
+                            chatToggle.classList.add('hidden'); // Sembunyikan tombol bulat saat chat terbuka
+                        });
+
+                        // Logika Tutup Chat
+                        closeChat.addEventListener('click', () => {
+                            chatWindow.classList.add('hidden');
+                            chatWindow.classList.remove('flex');
+                            chatToggle.classList.remove('hidden'); // Munculkan kembali tombol bulat
+                        });
+                    });
+                </script>
             @endrole
 
         </div>
