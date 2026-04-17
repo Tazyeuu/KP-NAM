@@ -83,7 +83,6 @@
                                             'In Progress' => 'bg-pink-50/50 text-pink-500 border-pink-100',
                                             'Resolved' => 'bg-green-50/50 border border-green-100 text-green-500',
                                             'Closed' => 'bg-gray-50 text-gray-600 border-gray-200',
-                                            default => 'bg-gray-50 text-gray-600 border-gray-200',
                                         };
                                     @endphp
                                     <span class="{{ $statusColor }} border text-xs px-2.5 py-1 rounded-md font-semibold">
@@ -234,11 +233,10 @@
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             @php
                                                 $statusBadge = match($ticket->status) {
-                                                    'Open' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
-                                                    'In Progress' => 'bg-blue-100 text-blue-700 border-blue-200',
-                                                    'Resolved' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                                                    'Closed' => 'bg-gray-100 text-gray-700 border-gray-200',
-                                                    default => 'bg-gray-100 text-gray-700',
+                                                    'Open' => 'bg-blue-50/50 border border-blue-100 text-blue-500',
+                                                    'In Progress' => 'bg-pink-50/50 text-pink-500 border-pink-100',
+                                                    'Resolved' => 'bg-green-50/50 border border-green-100 text-green-500',
+                                                    'Closed' => 'bg-gray-50 text-gray-600 border-gray-200',
                                                 };
                                             @endphp
                                             <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-md border uppercase {{ $statusBadge }}">

@@ -30,9 +30,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/tickets/{ticket}/verify', [TicketController::class, 'verify'])->name('tickets.verify');
     Route::post('/tickets/{ticket}/rework', [TicketController::class, 'rework'])->name('tickets.rework');
 
+    // Rute Edit dan Hapus Tiket
+    Route::get('/tickets/{ticket}/edit', [TicketController::class, 'edit'])->name('tickets.edit');
+    Route::put('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
+    Route::delete('/tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy');
+
     Route::middleware(['role:admin'])->group(function () {
-            Route::post('/tickets/{ticket}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
-            Route::post('/tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
+        Route::post('/tickets/{ticket}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
+        Route::post('/tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
     });
 });
 

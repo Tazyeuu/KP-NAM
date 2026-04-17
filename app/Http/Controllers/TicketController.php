@@ -59,7 +59,7 @@ class TicketController extends Controller
             'status' => 'Open',
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Tiket pelaporan berhasil dikirim ke Tim IT!');
+        return redirect()->route('dashboard')->with('success', 'Tiket pelaporan berhasil dibuat.');
     }
 
     /**
@@ -95,22 +95,6 @@ class TicketController extends Controller
             'status_to' => 'In Progress',
             'note' => $request->note ?? 'Teknisi ditugaskan oleh Admin.'
         ]);
-
-        // 3. KIRIM TUGAS KE APLIKASI MOBILE (Proyek Temanmu)
-        // Asumsikan temanmu punya endpoint API atau menggunakan Firebase (FCM)
-        /*try {
-            Http::post('https://api-mobile-temanmu.com/v1/send-task', [
-                'ticket_id' => $ticket->id,
-                'ticket_number' => $ticket->ticket_number,
-                'title' => $ticket->subject,
-                'description' => $ticket->description,
-                'department_lat' => $ticket->department->latitude,
-                'department_long' => $ticket->department->longitude,
-                'teknisi_id' => $request->teknisi_id,
-            ]);
-        } catch (\Exception $e) {
-            // Log error jika API mobile tidak bisa dijangkau
-        }*/
 
         return redirect()->back()->with('success', 'Teknisi berhasil ditugaskan.');
     }
@@ -155,14 +139,6 @@ class TicketController extends Controller
             'note' => 'Pelapor: ' . $request->note,
         ]);
 
-        /* try {
-            Http::post('https://api-mobile-rekanmu.com/v1/notifikasi-rework', [
-                'ticket_id' => $ticket->id,
-                'ticket_number' => $ticket->ticket_number,
-                'note' => $request->note, // Catatan mengapa dikembalikan
-            ]);
-        } catch (\Exception $e) { } */
-
         return redirect()->back()->with('success', 'Tiket dikembalikan ke teknisi.');
     }
 
@@ -189,7 +165,13 @@ class TicketController extends Controller
      */
     public function edit(Ticket $ticket)
     {
-        //
+        if (Auth::id() !== $ticket->user_id || $ticket->status !== 'Open') {
+            return redirect()->route('tickets.index')->with('error', 'Tiket tidak dapat diedit.');
+        }
+
+        $categories = Category::all(); 
+
+        return view('tickets.edit', compact('ticket', 'categories'));
     }
 
     /**
@@ -197,7 +179,21 @@ class TicketController extends Controller
      */
     public function update(Request $request, Ticket $ticket)
     {
-        //
+        if (Auth::id() !== $ticket->user_id || $ticket->status !== 'Open') {
+            return redirect()->route('tickets.index')->with('error', 'Tiket tidak dapat diedit.');
+        }
+
+        $request->validate([
+            'subject' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'priority' => 'required|in:Low,Medium,High',
+            'description' => 'required|string',
+            'location_detail' => 'required|string'
+        ]);
+
+        $ticket->update($request->all());
+
+        return redirect()->route('tickets.show', $ticket->id)->with('success', 'Tiket berhasil diperbarui.');
     }
 
     /**
@@ -205,6 +201,12 @@ class TicketController extends Controller
      */
     public function destroy(Ticket $ticket)
     {
-        //
+        if (Auth::id() !== $ticket->user_id || $ticket->status !== 'Open') {
+            return redirect()->route('tickets.index')->with('error', 'Tiket tidak dapat dihapus.');
+        }
+
+        $ticket->delete();
+
+        return redirect()->route('tickets.index')->with('success', 'Tiket berhasil dihapus.');
     }
 }

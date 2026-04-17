@@ -31,6 +31,22 @@
                 </div>
             </div>
 
+            @if(Auth::id() == $ticket->user_id && $ticket->status == 'Open')
+                <div class="flex items-center gap-3 mb-6 border-t border-gray-100">
+                    <a href="{{ route('tickets.edit', $ticket->id) }}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 shadow-sm hover:bg-gray-50 transition">
+                        Edit Laporan
+                    </a>
+                    
+                    <form action="{{ route('tickets.destroy', $ticket->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan dan menghapus laporan ini? Data yang dihapus tidak dapat dikembalikan.');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-50 border border-red-200 rounded-md font-semibold text-xs text-red-600 shadow-sm hover:bg-red-100 transition">
+                            Hapus Laporan
+                        </button>
+                    </form>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-2 space-y-6">
                     
