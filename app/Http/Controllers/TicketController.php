@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Models\TicketLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 
 class TicketController extends Controller
 {
@@ -17,8 +16,15 @@ class TicketController extends Controller
      */
     public function index()
     {
-        $tickets = Ticket::latest()->get()->all();
-        return view('tickets.index', compact('tickets'));;
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if ($user->hasRole('user')) {
+            $tickets = Ticket::where('user_id', $user->id)->with('category')->latest()->get();
+            return view('tickets.index', compact('tickets'));
+        }
+
+        $tickets = Ticket::with(['user', 'department', 'category'])->latest()->get();
+        return view('tickets.index', compact('tickets'));
     }
 
     /**
@@ -67,7 +73,6 @@ class TicketController extends Controller
      */
     public function show(Ticket $ticket)
     {
-        // Ambil daftar user yang memiliki role 'teknisi'
         $teknisi = User::role('teknisi')->get();
         return view('tickets.show', compact('ticket', 'teknisi'));
     }
@@ -85,7 +90,7 @@ class TicketController extends Controller
         // 2. Catat penugasan di tabel assignments
         $ticket->assignments()->create([
             'teknisi_id' => $request->teknisi_id,
-            'note' => $request->note ?? 'Teknisi ditugaskan oleh Admin.',
+            'note' => 'Admin: ' . ($request->note ?? 'Teknisi ditugaskan oleh Admin.'),
             'assigned_at' => now(),
         ]);
 
@@ -107,7 +112,7 @@ class TicketController extends Controller
             'ticket_id' => $ticket->id,
             'changed_by' => Auth::id(),
             'status_to' => 'Resolved',
-            'note' => 'Tiket diverifikasi dan masalah terselesaikan.'
+            'note' => 'Pelapor: Tiket diverifikasi dan masalah terselesaikan.'
         ]);
 
         return redirect()->back()->with('success', 'Tiket berhasil diverifikasi.');
@@ -154,7 +159,7 @@ class TicketController extends Controller
             'ticket_id' => $ticket->id,
             'changed_by' => Auth::id(),
             'status_to' => 'Closed',
-            'note' => $request->note ?? 'Tiket ditutup oleh Admin.',
+            'note' => 'Admin: ' . ($request->note ?? 'Tiket ditutup oleh Admin.'),
         ]);
 
         return redirect()->back()->with('success', 'Tiket berhasil ditutup.');

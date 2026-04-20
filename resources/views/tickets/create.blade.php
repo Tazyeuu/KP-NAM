@@ -24,7 +24,7 @@
 
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700">Subjek Singkat</label>
-                            <input type="text" name="subject" required placeholder="Misal: Printer IGD Tinta Habis" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                            <input type="text" name="subject" required placeholder="Misal: Tinta Printer Habis" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
                         </div>
 
                         <div class="mb-4">

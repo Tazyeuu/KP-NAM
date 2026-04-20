@@ -20,6 +20,9 @@
                         <x-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.index')">
                             {{ __('Antrean Tiket') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
+                            {{ __('Kelola Pengguna') }}
+                        </x-nav-link>
                     @endrole
 
                     @role('user')
@@ -86,6 +89,15 @@
             <x-responsive-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.index')">
                 {{ __('Antrean Tiket') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
+                {{ __('Kelola Pengguna') }}
+            </x-responsive-nav-link>
+            @endrole
+
+            @role('user')
+                <x-responsive-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.index')">
+                    {{ __('Histori Laporan') }}
+                </x-responsive-nav-link>
             @endrole
         </div>
 

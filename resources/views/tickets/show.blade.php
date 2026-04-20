@@ -22,10 +22,18 @@
                 <p class="text-xs font-mono text-gray-400">#{{ strtoupper(substr($ticket->ticket_number, -6)) }}</p>
                 <h1 class="text-3xl font-bold text-gray-900 mt-1">{{ $ticket->subject }}</h1>
                 <div class="flex gap-2 mt-4">
-                    <span class="px-3 py-1 rounded-md text-xs font-bold uppercase {{ $ticket->status == 'Open' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700' }}">
+                    @php
+                        $statusBadge = match($ticket->status) {
+                            'Open' => 'bg-blue-50/50 border border-blue-100 text-blue-500',
+                            'In Progress' => 'bg-pink-50/50 text-pink-500 border-pink-100',
+                            'Resolved' => 'bg-green-50/50 border border-green-100 text-green-500',
+                            'Closed' => 'bg-gray-50 text-gray-600 border-gray-200',
+                        };
+                    @endphp
+                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-md uppercase {{ $statusBadge }}">
                         {{ $ticket->status }}
                     </span>
-                    <span class="px-3 py-1 rounded-md text-xs font-bold bg-emerald-100 text-emerald-700">
+                    <span class="px-3 py-1 rounded-md text-xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
                         {{ $ticket->category->name }}
                     </span>
                 </div>

@@ -28,7 +28,6 @@ class DashboardController extends Controller
         }
 
         elseif ($user->hasRole('teknisi')) {
-            // Logika Teknisi: Hanya melihat tiket yang SUDAH SELESAI dan DITUGASKAN ke dia
             $completedTickets = Ticket::whereHas('assignments', function($query) use ($user) {
                 $query->where('teknisi_id', $user->id);
             })
