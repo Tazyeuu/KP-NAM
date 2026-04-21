@@ -25,6 +25,7 @@
                     @php
                         $statusBadge = match($ticket->status) {
                             'Open' => 'bg-blue-50/50 border border-blue-100 text-blue-500',
+                            'Assigned' => 'bg-orange-50/50 text-orange-500 border-orange-200',
                             'In Progress' => 'bg-pink-50/50 text-pink-500 border-pink-100',
                             'Resolved' => 'bg-green-50/50 border border-green-100 text-green-500',
                             'Closed' => 'bg-gray-50 text-gray-600 border-gray-200',
@@ -99,10 +100,10 @@
                         </div>
                     @endif
 
-                    @if($ticket->status == 'In Progress')
+                    @if($ticket->status == 'Assigned')
                         <div class="p-6 bg-blue-50 border-l-4 border-blue-400">
-                            <h3 class="font-bold text-blue-700">Sedang Dikerjakan</h3>
-                            <p class="text-sm text-blue-500">Teknisi telah ditugaskan. Saat ini teknisi sedang dalam proses perbaikan/pengecekan ke lokasi.</p>
+                            <h3 class="font-bold text-blue-700">Teknisi Ditugaskan</h3>
+                            <p class="text-sm text-blue-500">Teknisi telah ditugaskan dan sedang dalam perjalanan menuju ke lokasi.</p>
                         </div>
 
                         @php
@@ -119,13 +120,29 @@
                                 <span class="text-blue-600 font-semibold">Waktu Ditugaskan</span>
                                 <span class="md:col-span-2 text-gray-800">: {{ Carbon\Carbon::parse($assignment->assigned_at)->format('d M Y, H:i') }} WIB</span>
                             </div>
+                        </div>
+                    @endif
 
-                            @if($assignment->note)
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-1 border-t border-blue-100 pt-2 mt-2">
-                                    <span class="text-blue-600 font-semibold">Instruksi / Catatan</span>
-                                    <span class="md:col-span-2 text-gray-700">: "{{ $assignment->note }}"</span>
-                                </div>
-                            @endif
+                    @if($ticket->status == 'In Progress')
+                        <div class="p-6 bg-blue-50 border-l-4 border-blue-400">
+                            <h3 class="font-bold text-blue-700">Sedang Dikerjakan</h3>
+                            <p class="text-sm text-blue-500">Saat ini teknisi sedang dalam proses perbaikan/pengecekan di lokasi.</p>
+                        </div>
+
+                        @php
+                            $assignment = $ticket->assignments->last();
+                        @endphp
+                        
+                        <div class="bg-white/60 rounded-lg p-4 border border-blue-100 space-y-3 text-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+                                <span class="text-blue-600 font-semibold">Teknisi Bertugas</span>
+                                <span class="md:col-span-2 text-gray-800 font-medium">: {{ $assignment->teknisi->name }}</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+                                <span class="text-blue-600 font-semibold">Waktu Mulai</span>
+                                <span class="md:col-span-2 text-gray-800">: {{ Carbon\Carbon::parse($assignment->started_at)->format('d M Y, H:i') }} WIB</span>
+                            </div>
                         </div>
                     @endif
 

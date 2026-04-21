@@ -85,7 +85,7 @@ class TicketController extends Controller
         ]);
 
         // 1. Update status tiket
-        $ticket->update(['status' => 'In Progress']);
+        $ticket->update(['status' => 'Assigned']);
 
         // 2. Catat penugasan di tabel assignments
         $ticket->assignments()->create([
@@ -97,7 +97,7 @@ class TicketController extends Controller
         TicketLog::create([
             'ticket_id' => $ticket->id,
             'changed_by' => Auth::id(),
-            'status_to' => 'In Progress',
+            'status_to' => 'Assigned',
             'note' => $request->note ?? 'Teknisi ditugaskan oleh Admin.'
         ]);
 
@@ -127,7 +127,7 @@ class TicketController extends Controller
         $lastAssignment = $ticket->assignments()->latest()->first();
 
         $ticket->update([
-            'status' => 'In Progress',
+            'status' => 'Assigned',
             'is_verified' => false
         ]);
 
@@ -140,7 +140,7 @@ class TicketController extends Controller
         TicketLog::create([
             'ticket_id' => $ticket->id,
             'changed_by' => Auth::id(),
-            'status_to' => 'In Progress',
+            'status_to' => 'Assigned',
             'note' => 'Pelapor: ' . $request->note,
         ]);
 

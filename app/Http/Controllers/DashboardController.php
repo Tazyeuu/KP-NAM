@@ -11,19 +11,17 @@ class DashboardController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // Jika yang login adalah admin, ambil data statistik dan daftar tiket
         if ($user->hasRole('admin')) {
-            // Hitung statistik tiket berdasarkan status
             $openTickets = Ticket::where('status', 'Open')->count();
+            $assignedTickets = Ticket::where('status', 'Assigned')->count();
             $inProgressTickets = Ticket::where('status', 'In Progress')->count();
             $resolvedTickets = Ticket::where('status', 'Resolved')->count();
             $closedTickets = Ticket::where('status', 'Closed')->count();
 
-            // Ambil semua tiket terbaru beserta data relasinya (user, departemen, kategori)
             $tickets = Ticket::with(['user', 'department', 'category'])->latest()->get();
 
             return view('dashboard', compact(
-                'openTickets', 'inProgressTickets', 'resolvedTickets', 'closedTickets', 'tickets'
+                'openTickets', 'assignedTickets', 'inProgressTickets', 'resolvedTickets', 'closedTickets', 'tickets'
             ));
         }
 

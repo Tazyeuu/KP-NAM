@@ -14,7 +14,6 @@ class MobileTicketController extends Controller
         $tasks = Ticket::whereHas('assignments', function($query) use ($teknisi_id) {
             $query->where('teknisi_id', $teknisi_id);
         })
-        ->where('status', 'In Progress')
         ->with(['category', 'department'])
         ->get();
 
@@ -22,6 +21,31 @@ class MobileTicketController extends Controller
             'success' => true,
             'message' => 'Berhasil mengambil daftar tugas.',
             'data' => $tasks
+        ], 200);
+    }
+
+    public function startTask(Request $request)
+    {
+        $request->validate([
+            'ticket_id' => 'required|exists:tickets,id',
+            'teknisi_id' => 'required|exists:users,id'
+        ]);
+
+        $ticket = Ticket::find($request->ticket_id);
+
+        $ticket->update(['status' => 'In Progress']);
+        $ticket->assignments()->create(['started_at' => now()]);
+
+        TicketLog::create([
+            'ticket_id' => $ticket->id,
+            'changed_by' => $request->teknisi_id,
+            'status_to' => 'In Progress',
+            'note' => 'Teknisi: Pekerjaan dimulai oleh teknisi.',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pekerjaan dimulai. Status tiket menjadi In Progress.',
         ], 200);
     }
 
@@ -38,6 +62,7 @@ class MobileTicketController extends Controller
         $ticket->update([
             'status' => 'Resolved'
         ]);
+        $ticket->assignments()->create(['completed_at' => now()]);
 
         TicketLog::create([
             'ticket_id' => $ticket->id,

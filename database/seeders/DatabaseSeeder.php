@@ -19,12 +19,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Buat Role (Menggunakan Spatie)
         $adminRole = Role::create(['name' => 'admin']);
         $userRole = Role::create(['name' => 'user']);
         $techRole = Role::create(['name' => 'teknisi']);
 
-        // 2. Buat Data Ruangan / Department RSUD
         $igd = Department::create([
             'name' => 'IGD',
             'latitude' => -0.054321,
@@ -46,28 +44,25 @@ class DatabaseSeeder extends Seeder
             'longitude' => 109.345681,
         ]);
 
-        // 3. Buat Data Kategori Kendala IT
         Category::create(['name' => 'Jaringan']);
         Category::create(['name' => 'Hardware']);
         Category::create(['name' => 'Software']);
 
-        // 4. Buat Akun Admin (Tim IT)
         $admin = User::create([
             'name' => 'Admin IT RSUD',
             'email' => 'admin@rsud.com',
-            'password' => Hash::make('password'), // Password login: password
+            'password' => Hash::make('password'),
             'department_id' => $manajemen->id,
         ]);
-        $admin->assignRole($adminRole); // Berikan hak akses admin
+        $admin->assignRole($adminRole);
 
-        // 5. Buat Akun Staf / User Biasa
         $staf = User::create([
             'name' => 'Perawat IGD',
             'email' => 'perawat@rsud.com',
-            'password' => Hash::make('password'), // Password login: password
+            'password' => Hash::make('password'),
             'department_id' => $igd->id,
         ]);
-        $staf->assignRole($userRole); // Berikan hak akses user
+        $staf->assignRole($userRole);
 
         $teknisi = User::create([
             'name' => 'Teknisi IT',

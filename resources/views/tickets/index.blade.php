@@ -69,6 +69,7 @@
                                         @php
                                             $statusBadge = match($ticket->status) {
                                                 'Open' => 'bg-blue-50/50 border border-blue-100 text-blue-500',
+                                                'Assigned' => 'bg-orange-50 text-orange-500 border-orange-200',
                                                 'In Progress' => 'bg-pink-50/50 text-pink-500 border-pink-100',
                                                 'Resolved' => 'bg-green-50/50 border border-green-100 text-green-500',
                                                 'Closed' => 'bg-gray-50 text-gray-600 border-gray-200',

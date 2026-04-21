@@ -9,7 +9,7 @@
                 </div>
             </x-slot>
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                     <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex justify-between items-center">
                         <div>
                             <h4 class="text-blue-500 text-sm font-semibold mb-1">Open</h4>
@@ -17,6 +17,17 @@
                         </div>
                         <div class="p-2 bg-blue-100 text-blue-500 rounded-lg">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="bg-orange-50/50 border border-orange-100 rounded-xl p-4 flex justify-between items-center">
+                        <div>
+                            <h4 class="text-orange-500 text-sm font-semibold mb-1">Assigned</h4>
+                            <p class="text-2xl font-bold text-gray-800">{{ $assignedTickets }}</p>
+                        </div>
+                        <div class="p-2 bg-orange-100 text-orange-500 rounded-lg">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
                         </div>
                     </div>
                     <div class="bg-pink-50/50 border border-pink-100 rounded-xl p-4 flex justify-between items-center">
@@ -52,6 +63,7 @@
                     <select class="border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-blue-500">
                         <option>Semua Status</option>
                         <option>Open</option>
+                        <option>Assigned</option>
                         <option>In Progress</option>
                         <option>Resolved</option>
                         <option>Closed</option>
@@ -80,6 +92,7 @@
                                     @php
                                         $statusColor = match($ticket->status) {
                                             'Open' => 'bg-blue-50/50 border border-blue-100 text-blue-500',
+                                            'Assigned' => 'bg-orange-50 text-orange-500 border-orange-100',
                                             'In Progress' => 'bg-pink-50/50 text-pink-500 border-pink-100',
                                             'Resolved' => 'bg-green-50/50 border border-green-100 text-green-500',
                                             'Closed' => 'bg-gray-50 text-gray-600 border-gray-200',
@@ -234,6 +247,7 @@
                                             @php
                                                 $statusBadge = match($ticket->status) {
                                                     'Open' => 'bg-blue-50/50 border border-blue-100 text-blue-500',
+                                                    'Assigned' => 'bg-orange-50 text-orange-500 border-orange-100',
                                                     'In Progress' => 'bg-pink-50/50 text-pink-500 border-pink-100',
                                                     'Resolved' => 'bg-green-50/50 border border-green-100 text-green-500',
                                                     'Closed' => 'bg-gray-50 text-gray-600 border-gray-200',
@@ -290,7 +304,7 @@
                             </div>
 
                         <div class="p-3 bg-white border-t border-gray-100">
-                            <form id="chat-form" class="flex gap-2 items-center" onsubmit="event.preventDefault(); /* Integrasi API temanmu taruh di sini nanti */">
+                            <form id="chat-form" class="flex gap-2 items-center">
                                 <input type="text" id="chat-input" class="w-full bg-gray-100 border-transparent focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent rounded-full text-sm px-4 py-2.5 transition" placeholder="Ketik kendala Anda di sini...">
                                 <button type="submit" class="bg-indigo-600 text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-indigo-700 flex-shrink-0 transition shadow-md">
                                     <svg class="w-4 h-4 transform rotate-45 -mt-0.5 -ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
@@ -327,6 +341,77 @@
                             chatWindow.classList.remove('flex');
                             chatToggle.classList.remove('hidden'); // Munculkan kembali tombol bulat
                         });
+                    });
+
+                    const chatForm = document.getElementById('chat-form');
+                    const chatInput = document.getElementById('chat-input');
+                    const chatMessages = document.getElementById('chat-messages');
+
+                    function appendMessage(message, sender) {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+                        
+                        const bubbleColor = sender === 'user' 
+                            ? 'bg-indigo-600 text-white rounded-tr-sm' 
+                            : 'bg-white border border-gray-100 text-gray-700 rounded-tl-sm';
+
+                        messageDiv.innerHTML = `
+                            <div class="text-sm p-3 rounded-2xl max-w-[85%] shadow-sm ${bubbleColor}">
+                                ${message}
+                            </div>
+                        `;
+                        
+                        chatMessages.appendChild(messageDiv);
+                        
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+
+                    chatForm.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        
+                        const text = chatInput.value.trim();
+                        if (!text) return;
+
+                        appendMessage(text, 'user');
+                        chatInput.value = '';
+                        chatInput.disabled = true;
+
+                        const loadingId = 'loading-' + Date.now();
+                        chatMessages.innerHTML += `
+                            <div id="${loadingId}" class="flex justify-start mb-2">
+                                <div class="bg-gray-100 text-gray-500 text-xs p-2 rounded-xl italic">Bot sedang berpikir...</div>
+                            </div>
+                        `;
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                        try {
+                            const response = await fetch('http://10.220.108.71:3000/api/chat', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({ message: text }) 
+                            });
+
+                            const data = await response.json();
+                            
+                            document.getElementById(loadingId).remove();
+
+                            if(data.reply) {
+                                appendMessage(data.reply, 'bot');
+                            } else {
+                                appendMessage("Maaf, bot tidak memberikan jawaban yang dapat dibaca.", 'bot');
+                            }
+
+                        } catch (error) {
+                            document.getElementById(loadingId).remove();
+                            appendMessage("Waduh, koneksi ke server Bot terputus.", 'bot');
+                            console.error('Error Chatbot:', error);
+                        } finally {
+                            chatInput.disabled = false;
+                            chatInput.focus();
+                        }
                     });
                 </script>
             @endrole
