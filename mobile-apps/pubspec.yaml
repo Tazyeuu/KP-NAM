@@ -40,7 +40,9 @@ dependencies:
   shared_preferences: ^2.2.2 # Simpan Login
   firebase_core: ^4.4.0 # Wajib buat Notif
   firebase_messaging: ^16.1.1 # Push Notif
-
+  http: ^1.2.2 # HTTP client untuk hit API
+  flutter_secure_storage: ^9.2.2 # Simpan token dengan aman (encrypted)
+  flutter_dotenv: ^5.2.1 # Baca file .env agar tidak hardcode
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -61,10 +63,9 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
   uses-material-design: true
+  assets:
+    - .env
 
   # To add assets to your application, add an assets section, like this:
   # assets:

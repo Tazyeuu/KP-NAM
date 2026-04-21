@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../domain/task_model.dart';
+import 'package:provider/provider.dart';
+import '../domain/model/task_model.dart';
+import 'task_provider.dart';
 import 'task_list_page.dart';
 
 class TaskReportPage extends StatefulWidget {
@@ -13,23 +15,47 @@ class TaskReportPage extends StatefulWidget {
 
 class _TaskReportPageState extends State<TaskReportPage> {
   final _noteController = TextEditingController();
-  bool _isLoading = false;
+
+  // === Stopwatch ===
+  final Stopwatch _stopwatch = Stopwatch();
+  late final Stream<int> _timerStream;
+
+  @override
+  void initState() {
+    super.initState();
+    // Mulai timer saat halaman dibuka
+    _stopwatch.start();
+    // Update UI setiap detik
+    _timerStream = Stream.periodic(const Duration(seconds: 1), (tick) => tick);
+  }
 
   @override
   void dispose() {
+    _stopwatch.stop();
     _noteController.dispose();
     super.dispose();
   }
 
-  void _submitReport() {
-    setState(() => _isLoading = true);
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours.toString().padLeft(2, '0');
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$hours:$minutes:$seconds';
+  }
 
-    // Simulasi pengiriman data ke server/provider selama 2 detik
-    Future.delayed(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
+  Future<void> _submitReport() async {
+    _stopwatch.stop();
 
-      // Tampilkan notifikasi sukses
+    final provider = context.read<TaskProvider>();
+
+    await provider.resolveTicket(
+      ticketId: widget.task.id,
+      note: _noteController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (provider.isResolved) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Laporan berhasil dikirim! Pekerjaan Selesai.'),
@@ -37,15 +63,22 @@ class _TaskReportPageState extends State<TaskReportPage> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-
-      // Kembali ke Halaman Daftar Tugas dan hapus riwayat Check-in/Laporan
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const TaskListPage()),
-        (route) => route
-            .isFirst, // Hanya sisakan halaman paling dasar (biasanya Login/Home)
+        MaterialPageRoute(builder: (_) => const TaskListPage()),
+        (route) => false,
       );
-    });
+    } else if (provider.resolveError.isNotEmpty) {
+      // Kalau error, lanjutkan timer lagi
+      _stopwatch.start();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.resolveError),
+          backgroundColor: Colors.red[700],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override
@@ -72,7 +105,7 @@ class _TaskReportPageState extends State<TaskReportPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Info Singkat Tugas
+                    // === Info Tugas ===
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -94,17 +127,26 @@ class _TaskReportPageState extends State<TaskReportPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  widget.task.title,
+                                  widget.task.subject,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                   ),
                                 ),
+                                const SizedBox(height: 2),
                                 Text(
-                                  widget.task.roomName,
+                                  widget.task.ticketNumber,
+                                  style: TextStyle(
+                                    color: Colors.grey[500],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${widget.task.departmentName} — ${widget.task.locationDetail}',
                                   style: TextStyle(
                                     color: Colors.grey[700],
-                                    fontSize: 14,
+                                    fontSize: 13,
                                   ),
                                 ),
                               ],
@@ -115,51 +157,74 @@ class _TaskReportPageState extends State<TaskReportPage> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Area Ambil Foto Bukti
-                    const Text(
-                      'Foto Bukti Perbaikan',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    InkWell(
-                      onTap: () {
-                        // Nanti disambungkan dengan package image_picker
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        width: double.infinity,
-                        height: 150,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.grey[300]!,
-                            style: BorderStyle.solid,
+                    // === Stopwatch ===
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.camera_alt_outlined,
-                              size: 48,
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.timer_outlined,
+                                color: colorScheme.primary,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Waktu Pengerjaan',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          StreamBuilder<int>(
+                            stream: _timerStream,
+                            builder: (context, snapshot) {
+                              final duration = _stopwatch.elapsed;
+                              return Text(
+                                _formatDuration(duration),
+                                style: TextStyle(
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.primary,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Timer dimulai saat check-in berhasil',
+                            style: TextStyle(
+                              fontSize: 12,
                               color: Colors.grey[400],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Tap untuk ambil foto',
-                              style: TextStyle(color: Colors.grey[500]),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 24),
 
-                    // Area Input Catatan
+                    // === Catatan Teknisi ===
                     const Text(
                       'Catatan Teknisi',
                       style: TextStyle(
@@ -173,7 +238,7 @@ class _TaskReportPageState extends State<TaskReportPage> {
                       maxLines: 5,
                       decoration: InputDecoration(
                         hintText:
-                            'Misal: Kabel LAN sudah diganti dengan yang baru dan dites ping lancar...',
+                            'Deskripsikan pekerjaan yang telah dilakukan...',
                         hintStyle: TextStyle(color: Colors.grey[400]),
                         filled: true,
                         fillColor: Colors.white,
@@ -199,50 +264,54 @@ class _TaskReportPageState extends State<TaskReportPage> {
               ),
             ),
 
-            // Tombol Submit di bawah
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -4),
+            // === Tombol Submit ===
+            Consumer<TaskProvider>(
+              builder: (context, provider, _) {
+                return Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      icon: provider.isResolving
+                          ? const SizedBox.shrink()
+                          : const Icon(Icons.send),
+                      label: provider.isResolving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Kirim Laporan & Selesai',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                      onPressed: provider.isResolving ? null : _submitReport,
                     ),
                   ),
-                  icon: _isLoading
-                      ? const SizedBox.shrink()
-                      : const Icon(Icons.send),
-                  label: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text(
-                          'Kirim Laporan & Selesai',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                  onPressed: _isLoading ? null : _submitReport,
-                ),
-              ),
+                );
+              },
             ),
           ],
         ),

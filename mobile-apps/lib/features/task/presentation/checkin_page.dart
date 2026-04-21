@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../domain/task_model.dart';
+import '../domain/model/task_model.dart';
 import 'task_provider.dart';
 import 'task_report_page.dart';
 
@@ -17,7 +17,6 @@ class _CheckinPageState extends State<CheckinPage> {
   @override
   void initState() {
     super.initState();
-    // Membersihkan status error/success lama setiap kali masuk ke halaman ini
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TaskProvider>().clearStatus();
     });
@@ -25,26 +24,19 @@ class _CheckinPageState extends State<CheckinPage> {
 
   void _handleCheckIn() async {
     final provider = context.read<TaskProvider>();
-
-    // Menjalankan proses check-in
     await provider.processCheckIn(widget.task);
 
-    // Mengecek hasil setelah proses selesai
     if (!mounted) return;
 
     if (provider.isSuccess) {
-      // Menutup halaman Check-in dan langsung membuka halaman Laporan
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => TaskReportPage(task: widget.task),
-        ),
+        MaterialPageRoute(builder: (_) => TaskReportPage(task: widget.task)),
       );
-    } else if (provider.errorMessage.isNotEmpty) {
-      // Tampilkan error (Warna Merah)
+    } else if (provider.checkInError.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(provider.errorMessage),
+          content: Text(provider.checkInError),
           backgroundColor: Colors.red[700],
           behavior: SnackBarBehavior.floating,
         ),
@@ -109,6 +101,7 @@ class _CheckinPageState extends State<CheckinPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Header
                           Text(
                             'INFORMASI PEKERJAAN',
                             style: TextStyle(
@@ -119,68 +112,75 @@ class _CheckinPageState extends State<CheckinPage> {
                             ),
                           ),
                           const SizedBox(height: 16),
+
+                          // Ticket Number
                           Text(
-                            widget.task.title,
+                            widget.task.ticketNumber,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[500],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+
+                          // Subject
+                          Text(
+                            widget.task.subject,
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          const SizedBox(height: 8),
+
+                          // Description
+                          Text(
+                            widget.task.description,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                              height: 1.5,
+                            ),
+                          ),
                           const SizedBox(height: 20),
                           const Divider(),
                           const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange[50],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  Icons.meeting_room,
-                                  color: Colors.orange[800],
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                widget.task.roomName,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey[800],
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+
+                          // Category
+                          _buildInfoRow(
+                            icon: Icons.category_outlined,
+                            iconColor: Colors.purple[800]!,
+                            bgColor: Colors.purple[50]!,
+                            text: widget.task.categoryName,
                           ),
                           const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue[50],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  Icons.gps_fixed,
-                                  color: Colors.blue[800],
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Titik Kordinat: \n${widget.task.targetLat}, ${widget.task.targetLng}',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                    height: 1.5,
-                                  ),
-                                ),
-                              ),
-                            ],
+
+                          // Department
+                          _buildInfoRow(
+                            icon: Icons.meeting_room,
+                            iconColor: Colors.orange[800]!,
+                            bgColor: Colors.orange[50]!,
+                            text: widget.task.departmentName,
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Location Detail
+                          _buildInfoRow(
+                            icon: Icons.location_on_outlined,
+                            iconColor: Colors.green[800]!,
+                            bgColor: Colors.green[50]!,
+                            text: widget.task.locationDetail,
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Koordinat
+                          _buildInfoRow(
+                            icon: Icons.gps_fixed,
+                            iconColor: Colors.blue[800]!,
+                            bgColor: Colors.blue[50]!,
+                            text:
+                                'Koordinat: ${widget.task.targetLat}, ${widget.task.targetLng}',
                           ),
                         ],
                       ),
@@ -190,9 +190,9 @@ class _CheckinPageState extends State<CheckinPage> {
               ),
             ),
 
-            // Consumer khusus untuk tombol agar bisa loading
+            // Tombol Check-in
             Consumer<TaskProvider>(
-              builder: (context, provider, child) {
+              builder: (context, provider, _) {
                 return Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -242,6 +242,37 @@ class _CheckinPageState extends State<CheckinPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoRow({
+    required IconData icon,
+    required Color iconColor,
+    required Color bgColor,
+    required String text,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: iconColor, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey[800],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

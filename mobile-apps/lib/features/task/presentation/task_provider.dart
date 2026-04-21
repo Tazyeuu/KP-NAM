@@ -1,51 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import '../data/repository/task_repository_impl.dart';
+import '../domain/model/task_model.dart';
+import '../../../core/storage/secure_storage.dart';
 
-import '../domain/task_model.dart';
+enum TaskStatus { idle, loading, success, error }
 
 class TaskProvider extends ChangeNotifier {
-  static const double _maxDistanceMeters = 30;
+  static const double _maxDistanceMeters = 25;
 
-  final List<TaskModel> taskList = [
-    TaskModel(
-      id: 'task-1',
-      title: 'Test',
-      roomName: 'PotLuck',
-      targetLat: -0.024620,
-      targetLng: 109.338119,
-    ),
-    TaskModel(
-      id: 'task-2',
-      title: 'Pemeliharaan PC',
-      roomName: 'Poli Gigi',
-      targetLat: -0.054123,
-      targetLng: 109.346789,
-    ),
-    TaskModel(
-      id: 'task-3',
-      title: 'Cek Kabel',
-      roomName: 'Apotek',
-      targetLat: -0.052987,
-      targetLng: 109.344321,
-    ),
-  ];
+  final _repository = TaskRepositoryImpl();
 
+  // === State Daftar Tugas ===
+  List<TaskModel> _tasks = [];
+  TaskStatus _taskStatus = TaskStatus.idle;
+  String _errorMessage = '';
+
+  List<TaskModel> get tasks => _tasks;
+  TaskStatus get taskStatus => _taskStatus;
+  String get errorMessage => _errorMessage;
+  bool get isLoadingTasks => _taskStatus == TaskStatus.loading;
+
+  // === State Check-in ===
   bool isLoading = false;
   bool isSuccess = false;
-  String errorMessage = '';
+  String checkInError = '';
 
-  List<TaskModel> get tasks => taskList;
+  // === State Resolve ===
+  bool isResolving = false;
+  bool isResolved = false;
+  String resolveError = '';
 
+  // === Ambil Daftar Tugas ===
+  Future<void> fetchMyTasks() async {
+    _updateTaskState(TaskStatus.loading);
+    try {
+      final userIdStr = await SecureStorage.getUserId();
+      if (userIdStr == null) {
+        _updateTaskState(
+          TaskStatus.error,
+          message: 'Sesi tidak valid. Silakan login ulang.',
+        );
+        return;
+      }
+      final tasks = await _repository.getMyTasks(int.parse(userIdStr));
+      _tasks = tasks;
+      _updateTaskState(TaskStatus.success);
+    } catch (e) {
+      final message = e.toString().replaceFirst('Exception: ', '');
+      _updateTaskState(TaskStatus.error, message: message);
+    }
+  }
+
+  void _updateTaskState(TaskStatus status, {String message = ''}) {
+    _taskStatus = status;
+    _errorMessage = message;
+    notifyListeners();
+  }
+
+  // === Proses Check-in + Start Task ===
   Future<void> processCheckIn(TaskModel task) async {
-    _updateState(isLoading: true, isSuccess: false, errorMessage: '');
+    _setCheckInState(isLoading: true, isSuccess: false, error: '');
 
     try {
+      // 1. Validasi lokasi
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        _updateState(
+        _setCheckInState(
           isLoading: false,
-          isSuccess: false,
-          errorMessage: 'Error: Layanan lokasi tidak aktif',
+          error: 'Layanan lokasi tidak aktif.',
         );
         return;
       }
@@ -54,21 +77,14 @@ class TaskProvider extends ChangeNotifier {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
-
       if (permission == LocationPermission.denied) {
-        _updateState(
-          isLoading: false,
-          isSuccess: false,
-          errorMessage: 'Error: Izin lokasi ditolak',
-        );
+        _setCheckInState(isLoading: false, error: 'Izin lokasi ditolak.');
         return;
       }
-
       if (permission == LocationPermission.deniedForever) {
-        _updateState(
+        _setCheckInState(
           isLoading: false,
-          isSuccess: false,
-          errorMessage: 'Error: Izin lokasi ditolak permanen',
+          error: 'Izin lokasi ditolak permanen.',
         );
         return;
       }
@@ -86,52 +102,94 @@ class TaskProvider extends ChangeNotifier {
         task.targetLng,
       );
 
-      if (distance <= _maxDistanceMeters) {
-        _updateState(isLoading: false, isSuccess: true, errorMessage: '');
-      } else {
-        _updateState(
+      if (distance > _maxDistanceMeters) {
+        _setCheckInState(
           isLoading: false,
-          isSuccess: false,
-          errorMessage: 'Error: Anda berada di luar jangkauan lokasi tugas',
+          error:
+              'Anda berada ${distance.toStringAsFixed(0)}m dari lokasi. Maksimal ${_maxDistanceMeters.toInt()}m.',
         );
+        return;
       }
-    } catch (_) {
-      _updateState(
-        isLoading: false,
-        isSuccess: false,
-        errorMessage: 'Error: Gagal mendapatkan lokasi',
+
+      // 2. Lokasi valid → hit API start task
+      final userIdStr = await SecureStorage.getUserId();
+      if (userIdStr == null) {
+        _setCheckInState(
+          isLoading: false,
+          error: 'Sesi tidak valid. Silakan login ulang.',
+        );
+        return;
+      }
+
+      await _repository.startTask(
+        ticketId: task.id,
+        teknisiId: int.parse(userIdStr),
       );
+
+      _setCheckInState(isLoading: false, isSuccess: true);
+    } catch (e) {
+      final message = e.toString().replaceFirst('Exception: ', '');
+      _setCheckInState(isLoading: false, error: message);
     }
+  }
+
+  // === Resolve Ticket ===
+  Future<void> resolveTicket({
+    required int ticketId,
+    required String note,
+  }) async {
+    _setResolveState(isResolving: true, isResolved: false, error: '');
+
+    try {
+      final userIdStr = await SecureStorage.getUserId();
+      if (userIdStr == null) {
+        _setResolveState(
+          isResolving: false,
+          error: 'Sesi tidak valid. Silakan login ulang.',
+        );
+        return;
+      }
+
+      await _repository.resolveTicket(
+        ticketId: ticketId,
+        teknisiId: int.parse(userIdStr),
+        note: note,
+      );
+
+      _setResolveState(isResolving: false, isResolved: true);
+    } catch (e) {
+      final message = e.toString().replaceFirst('Exception: ', '');
+      _setResolveState(isResolving: false, error: message);
+    }
+  }
+
+  void _setResolveState({
+    required bool isResolving,
+    bool isResolved = false,
+    String error = '',
+  }) {
+    this.isResolving = isResolving;
+    this.isResolved = isResolved;
+    this.resolveError = error;
+    notifyListeners();
   }
 
   void clearStatus() {
-    if (isSuccess || errorMessage.isNotEmpty) {
-      isSuccess = false;
-      errorMessage = '';
-      notifyListeners();
-    }
+    isSuccess = false;
+    checkInError = '';
+    isResolved = false;
+    resolveError = '';
+    notifyListeners();
   }
 
-  void _updateState({bool? isLoading, bool? isSuccess, String? errorMessage}) {
-    var changed = false;
-
-    if (isLoading != null && isLoading != this.isLoading) {
-      this.isLoading = isLoading;
-      changed = true;
-    }
-
-    if (isSuccess != null && isSuccess != this.isSuccess) {
-      this.isSuccess = isSuccess;
-      changed = true;
-    }
-
-    if (errorMessage != null && errorMessage != this.errorMessage) {
-      this.errorMessage = errorMessage;
-      changed = true;
-    }
-
-    if (changed) {
-      notifyListeners();
-    }
+  void _setCheckInState({
+    required bool isLoading,
+    bool isSuccess = false,
+    String error = '',
+  }) {
+    this.isLoading = isLoading;
+    this.isSuccess = isSuccess;
+    this.checkInError = error;
+    notifyListeners();
   }
 }

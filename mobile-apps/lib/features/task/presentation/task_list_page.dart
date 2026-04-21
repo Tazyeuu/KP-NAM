@@ -4,8 +4,22 @@ import 'task_provider.dart';
 import 'checkin_page.dart';
 import '../../profile/presentation/profile_page.dart';
 
-class TaskListPage extends StatelessWidget {
+class TaskListPage extends StatefulWidget {
   const TaskListPage({super.key});
+
+  @override
+  State<TaskListPage> createState() => _TaskListPageState();
+}
+
+class _TaskListPageState extends State<TaskListPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Ambil data saat halaman pertama kali dibuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TaskProvider>().fetchMyTasks();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +33,6 @@ class TaskListPage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
-        // INI DIA TAMBAHAN TOMBOL PROFILNYA:
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle),
@@ -27,7 +40,7 @@ class TaskListPage extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ProfilePage()),
+                MaterialPageRoute(builder: (_) => const ProfilePage()),
               );
             },
           ),
@@ -36,115 +49,196 @@ class TaskListPage extends StatelessWidget {
       ),
       body: Consumer<TaskProvider>(
         builder: (context, provider, child) {
-          final tasks = provider.tasks;
-
-          if (tasks.isEmpty) {
-            return const Center(child: Text('Tidak ada tugas saat ini.'));
+          // Loading
+          if (provider.isLoadingTasks) {
+            return const Center(child: CircularProgressIndicator());
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: tasks.length,
-            itemBuilder: (context, index) {
-              final task = tasks[index];
-              return Card(
-                elevation: 2,
-                margin: const EdgeInsets.only(bottom: 16),
-                shadowColor: Colors.black.withOpacity(0.1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CheckinPage(task: task),
-                      ),
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                task.title,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+          // Error
+          if (provider.taskStatus == TaskStatus.error) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                  const SizedBox(height: 16),
+                  Text(
+                    provider.errorMessage,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: () => provider.fetchMyTasks(),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Coba Lagi'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Kosong
+          if (provider.tasks.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.task_alt, size: 64, color: Colors.grey[300]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Tidak ada tugas saat ini.',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Ada data
+          return RefreshIndicator(
+            onRefresh: () => provider.fetchMyTasks(),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: provider.tasks.length,
+              itemBuilder: (context, index) {
+                final task = provider.tasks[index];
+                return Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  shadowColor: Colors.black.withOpacity(0.1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CheckinPage(task: task),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Ticket Number + Status
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                task.ticketNumber,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[500],
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
+                              _buildStatusBadge(task.status),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Subject
+                          Text(
+                            task.subject,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                            _buildStatusBadge(task.status),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.location_on,
-                                size: 20,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
+                          ),
+                          const SizedBox(height: 4),
+
+                          // Category
+                          Text(
+                            task.categoryName,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[500],
                             ),
-                            const SizedBox(width: 12),
-                            Text(
-                              task.roomName,
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: Colors.grey[700],
-                                fontWeight: FontWeight.w500,
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Department + Location
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.location_on,
+                                  size: 20,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      task.departmentName,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.grey[700],
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      task.locationDetail,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[500],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Priority Badge
+                              _buildPriorityBadge(task.priority),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         },
       ),
     );
   }
 
-  // Fungsi untuk membuat label status yang berwarna-warni
   Widget _buildStatusBadge(String status) {
     Color bgColor;
     Color textColor;
     String label;
 
     switch (status.toLowerCase()) {
-      case 'completed':
-        bgColor = Colors.green[100]!;
-        textColor = Colors.green[800]!;
-        label = 'Selesai';
-        break;
-      case 'in_progress':
+      case 'in progress':
         bgColor = Colors.blue[100]!;
         textColor = Colors.blue[800]!;
         label = 'Diproses';
         break;
-      default:
+      case 'assigned':
         bgColor = Colors.orange[100]!;
         textColor = Colors.orange[800]!;
-        label = 'Menunggu';
+        label = 'Ditugaskan';
+        break;
+      default:
+        bgColor = Colors.grey[100]!;
+        textColor = Colors.grey[800]!;
+        label = status;
     }
 
     return Container(
@@ -161,6 +255,39 @@ class TaskListPage extends StatelessWidget {
           fontWeight: FontWeight.bold,
         ),
       ),
+    );
+  }
+
+  Widget _buildPriorityBadge(String priority) {
+    Color color;
+    IconData icon;
+
+    switch (priority.toLowerCase()) {
+      case 'high':
+        color = Colors.red[700]!;
+        icon = Icons.keyboard_double_arrow_up;
+        break;
+      case 'medium':
+        color = Colors.orange[700]!;
+        icon = Icons.keyboard_arrow_up;
+        break;
+      default:
+        color = Colors.green[700]!;
+        icon = Icons.keyboard_arrow_down;
+    }
+
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color),
+        Text(
+          priority,
+          style: TextStyle(
+            fontSize: 12,
+            color: color,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }
