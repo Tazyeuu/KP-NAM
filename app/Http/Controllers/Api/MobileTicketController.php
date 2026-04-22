@@ -34,7 +34,7 @@ class MobileTicketController extends Controller
         $ticket = Ticket::find($request->ticket_id);
 
         $ticket->update(['status' => 'In Progress']);
-        $ticket->assignments()->create(['started_at' => now()]);
+        $ticket->assignments()->update(['started_at' => now()]);
 
         TicketLog::create([
             'ticket_id' => $ticket->id,
@@ -62,7 +62,7 @@ class MobileTicketController extends Controller
         $ticket->update([
             'status' => 'Resolved'
         ]);
-        $ticket->assignments()->create(['completed_at' => now()]);
+        $ticket->assignments()->update(['completed_at' => now()]);
 
         TicketLog::create([
             'ticket_id' => $ticket->id,
