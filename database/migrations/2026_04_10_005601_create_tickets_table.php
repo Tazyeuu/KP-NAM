@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('location_detail')->nullable(); // Detail tambahan lokasi, misal: "Meja Perawat"
             $table->string('subject');
             $table->text('description');
-            $table->string('image_path')->nullable();
             $table->enum('priority', ['Low', 'Medium', 'High'])->default('Low');
             $table->enum('status', ['Open', 'In Progress', 'Resolved', 'Closed'])->default('Open');
             $table->timestamps();
