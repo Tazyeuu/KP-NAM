@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use App\Models\TicketLog;
-use Illuminate\Support\Facades\Auth;
 
 class MobileTicketController extends Controller
 {
