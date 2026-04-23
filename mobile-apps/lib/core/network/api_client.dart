@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../constants/app_constants.dart';
+import '../services/session_service.dart';
 
 class ApiClient {
   ApiClient._();
@@ -25,14 +27,7 @@ class ApiClient {
           .post(uri, headers: headers, body: jsonEncode(body))
           .timeout(const Duration(seconds: 15));
 
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        final message = decoded['message'] ?? 'Terjadi kesalahan pada server.';
-        throw Exception(message);
-      }
-
-      return decoded;
+      return _handleResponse(response);
     } on SocketException {
       throw Exception('Tidak ada koneksi internet.');
     } on HttpException {
@@ -45,7 +40,6 @@ class ApiClient {
     }
   }
 
-  // ← tambah method GET
   static Future<Map<String, dynamic>> get({
     required String endpoint,
     String? token,
@@ -62,14 +56,7 @@ class ApiClient {
           .get(uri, headers: headers)
           .timeout(const Duration(seconds: 15));
 
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        final message = decoded['message'] ?? 'Terjadi kesalahan pada server.';
-        throw Exception(message);
-      }
-
-      return decoded;
+      return _handleResponse(response);
     } on SocketException {
       throw Exception('Tidak ada koneksi internet.');
     } on HttpException {
@@ -80,5 +67,22 @@ class ApiClient {
       if (e is Exception) rethrow;
       throw Exception('Terjadi kesalahan: $e');
     }
+  }
+
+  static Map<String, dynamic> _handleResponse(http.Response response) {
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+
+    // Handle 401 — token expired atau tidak valid
+    if (response.statusCode == 401) {
+      SessionService.handleSessionExpired();
+      throw Exception('Sesi Anda telah berakhir. Silakan login ulang.');
+    }
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final message = decoded['message'] ?? 'Terjadi kesalahan pada server.';
+      throw Exception(message);
+    }
+
+    return decoded;
   }
 }

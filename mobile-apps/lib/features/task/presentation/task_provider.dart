@@ -3,15 +3,23 @@ import 'package:geolocator/geolocator.dart';
 import '../data/repository/task_repository_impl.dart';
 import '../domain/model/task_model.dart';
 import '../../../core/storage/secure_storage.dart';
+import 'dart:async';
 
 enum TaskStatus { idle, loading, success, error }
 
 class TaskProvider extends ChangeNotifier {
+  // Radius maksimal check-in
   static const double _maxDistanceMeters = 25;
+
+  // Settings GPS — balance antara akurasi dan baterai
+  static const _locationSettings = LocationSettings(
+    accuracy: LocationAccuracy.medium, // ← turun dari high ke medium
+    distanceFilter: 0,
+    timeLimit: Duration(seconds: 10), // ← timeout 10 detik
+  );
 
   final _repository = TaskRepositoryImpl();
 
-  // === State Daftar Tugas ===
   List<TaskModel> _tasks = [];
   TaskStatus _taskStatus = TaskStatus.idle;
   String _errorMessage = '';
@@ -21,19 +29,29 @@ class TaskProvider extends ChangeNotifier {
   String get errorMessage => _errorMessage;
   bool get isLoadingTasks => _taskStatus == TaskStatus.loading;
 
-  // === State Check-in ===
   bool isLoading = false;
   bool isSuccess = false;
   String checkInError = '';
 
-  // === State Resolve ===
   bool isResolving = false;
   bool isResolved = false;
   String resolveError = '';
 
-  // === Ambil Daftar Tugas ===
-  Future<void> fetchMyTasks() async {
+  // Cache tasks — hindari fetch berulang
+  DateTime? _lastFetchTime;
+  static const _cacheDuration = Duration(minutes: 2);
+
+  bool get _isCacheValid {
+    if (_lastFetchTime == null) return false;
+    return DateTime.now().difference(_lastFetchTime!) < _cacheDuration;
+  }
+
+  Future<void> fetchMyTasks({bool forceRefresh = false}) async {
+    // Pakai cache kalau masih valid dan tidak force refresh
+    if (!forceRefresh && _isCacheValid && _tasks.isNotEmpty) return;
+
     _updateTaskState(TaskStatus.loading);
+
     try {
       final userIdStr = await SecureStorage.getUserId();
       if (userIdStr == null) {
@@ -43,8 +61,10 @@ class TaskProvider extends ChangeNotifier {
         );
         return;
       }
+
       final tasks = await _repository.getMyTasks(int.parse(userIdStr));
       _tasks = tasks;
+      _lastFetchTime = DateTime.now();
       _updateTaskState(TaskStatus.success);
     } catch (e) {
       final message = e.toString().replaceFirst('Exception: ', '');
@@ -58,12 +78,11 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // === Proses Check-in + Start Task ===
   Future<void> processCheckIn(TaskModel task) async {
     _setCheckInState(isLoading: true, isSuccess: false, error: '');
 
     try {
-      // 1. Validasi lokasi
+      // 1. Cek service lokasi aktif
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         _setCheckInState(
@@ -73,6 +92,7 @@ class TaskProvider extends ChangeNotifier {
         return;
       }
 
+      // 2. Cek permission
       var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -89,12 +109,12 @@ class TaskProvider extends ChangeNotifier {
         return;
       }
 
+      // 3. Ambil posisi dengan timeout
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
+        locationSettings: _locationSettings,
       );
 
+      // 4. Hitung jarak
       final distance = Geolocator.distanceBetween(
         position.latitude,
         position.longitude,
@@ -111,7 +131,7 @@ class TaskProvider extends ChangeNotifier {
         return;
       }
 
-      // 2. Lokasi valid → hit API start task
+      // 5. Lokasi valid → hit API start task
       final userIdStr = await SecureStorage.getUserId();
       if (userIdStr == null) {
         _setCheckInState(
@@ -126,14 +146,21 @@ class TaskProvider extends ChangeNotifier {
         teknisiId: int.parse(userIdStr),
       );
 
+      // 6. Invalidate cache agar list tugas ter-refresh
+      _lastFetchTime = null;
+
       _setCheckInState(isLoading: false, isSuccess: true);
+    } on TimeoutException {
+      _setCheckInState(
+        isLoading: false,
+        error: 'GPS timeout. Pastikan Anda berada di area terbuka.',
+      );
     } catch (e) {
       final message = e.toString().replaceFirst('Exception: ', '');
       _setCheckInState(isLoading: false, error: message);
     }
   }
 
-  // === Resolve Ticket ===
   Future<void> resolveTicket({
     required int ticketId,
     required String note,
@@ -156,6 +183,9 @@ class TaskProvider extends ChangeNotifier {
         note: note,
       );
 
+      // Invalidate cache
+      _lastFetchTime = null;
+
       _setResolveState(isResolving: false, isResolved: true);
     } catch (e) {
       final message = e.toString().replaceFirst('Exception: ', '');
@@ -170,7 +200,7 @@ class TaskProvider extends ChangeNotifier {
   }) {
     this.isResolving = isResolving;
     this.isResolved = isResolved;
-    this.resolveError = error;
+    resolveError = error;
     notifyListeners();
   }
 
@@ -189,7 +219,7 @@ class TaskProvider extends ChangeNotifier {
   }) {
     this.isLoading = isLoading;
     this.isSuccess = isSuccess;
-    this.checkInError = error;
+    checkInError = error;
     notifyListeners();
   }
 }

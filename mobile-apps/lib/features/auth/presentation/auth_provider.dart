@@ -1,4 +1,3 @@
-//lib/features/auth/presentation/auth_provider.dart
 import 'package:flutter/material.dart';
 import '../data/repository/auth_repository_impl.dart';
 
@@ -14,20 +13,21 @@ class AuthProvider extends ChangeNotifier {
   AuthStatus get status => _status;
   String get errorMessage => _errorMessage;
   String get userName => _userName;
-
   bool get isLoading => _status == AuthStatus.loading;
 
   Future<void> login({required String email, required String password}) async {
-    print('>>> AuthProvider.login() dipanggil'); // ← tambah ini
     _updateState(AuthStatus.loading);
 
     try {
-      print('>>> Memanggil repository...'); // ← tambah ini
       final user = await _repository.login(email: email, password: password);
       _userName = user.name;
+
+      // Kirim FCM token ke server setelah login berhasil
+      // Tidak perlu await — biarkan jalan di background
+      _repository.updateFcmToken();
+
       _updateState(AuthStatus.success);
     } catch (e) {
-      print('>>> Error: $e'); // ← tambah ini
       final message = e.toString().replaceFirst('Exception: ', '');
       _updateState(AuthStatus.error, message: message);
     }

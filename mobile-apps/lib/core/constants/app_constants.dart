@@ -7,8 +7,9 @@ class AppConstants {
       dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000';
 
   static const String loginEndpoint = '/mobile/login';
-  static const String tasksEndpoint = '/mobile/tasks'; // ← tambah ini
-  static const String startTaskEndpoint = '/mobile/tickets/start'; // ← baru
-  static const String resolveTicketEndpoint =
-      '/mobile/tickets/resolve'; // ← baru
+  static const String tasksEndpoint = '/mobile/tasks';
+  static const String startTaskEndpoint = '/mobile/tickets/start';
+  static const String resolveTicketEndpoint = '/mobile/tickets/resolve';
+  static const String updateFcmTokenEndpoint =
+      '/mobile/update-fcm-token'; // ← baru
 }
