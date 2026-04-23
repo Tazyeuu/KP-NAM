@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use App\Models\TicketLog;
+use Illuminate\Support\Facades\Auth;
 
 class MobileTicketController extends Controller
 {
@@ -79,5 +80,38 @@ class MobileTicketController extends Controller
                 'status' => $ticket->status
             ]
         ], 200);
+    }
+
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate(['fcm_token' => 'required']);
+        
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        
+        $user->update(['fcm_token' => $request->fcm_token]);
+
+        return response()->json(['message' => 'FCM Token updated successfully']);
+    }
+
+    public static function sendNotificationToTeknisi($user, $title, $body, $ticketId)
+    {
+        if (!$user->fcm_token) return;
+
+        $messaging = app('firebase.messaging');
+        
+        $message = \Kreait\Firebase\Messaging\CloudMessage::fromArray([
+            'token' => $user->fcm_token,
+            'notification' => [
+                'title' => $title,
+                'body' => $body,
+            ],
+            'data' => [
+                'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                'ticket_id' => (string) $ticketId,
+            ]
+        ]);
+
+        $messaging->send($message);
     }
 }

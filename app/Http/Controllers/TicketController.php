@@ -101,6 +101,15 @@ class TicketController extends Controller
             'note' => $request->note ?? 'Teknisi ditugaskan oleh Admin.'
         ]);
 
+        $teknisi = User::find($request->teknisi_id);
+
+        \App\Http\Controllers\Api\MobileTicketController::sendNotificationToTeknisi(
+            $teknisi, 
+            'Tugas Baru!',
+            'Anda mendapat tugas baru: ' . $ticket->subject . ' di ' . $ticket->department->name,
+            $ticket->id
+        );
+
         return redirect()->back()->with('success', 'Teknisi berhasil ditugaskan.');
     }
 
@@ -143,6 +152,15 @@ class TicketController extends Controller
             'status_to' => 'Assigned',
             'note' => 'Pelapor: ' . $request->note,
         ]);
+
+        $teknisi = User::find($lastAssignment->teknisi_id);
+
+        \App\Http\Controllers\Api\MobileTicketController::sendNotificationToTeknisi(
+            $teknisi, 
+            'Tugas Baru!',
+            'Anda mendapat tugas baru: ' . $ticket->subject . ' di ' . $ticket->department->name,
+            $ticket->id
+        );
 
         return redirect()->back()->with('success', 'Tiket dikembalikan ke teknisi.');
     }

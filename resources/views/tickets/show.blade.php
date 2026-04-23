@@ -195,6 +195,22 @@
                                 </div>
                             @endif
                         </div>
+
+                        @php
+                            $assignment = $ticket->assignments->last();
+                        @endphp
+
+                        <div class="bg-white/60 rounded-lg p-4 border border-blue-100 space-y-3 text-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+                                <span class="text-blue-600 font-semibold">Teknisi Bertugas</span>
+                                <span class="md:col-span-2 text-gray-800 font-medium">: {{ $assignment->teknisi->name }}</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+                                <span class="text-blue-600 font-semibold">Waktu Selesai</span>
+                                <span class="md:col-span-2 text-gray-800">: {{ Carbon\Carbon::parse($assignment->completed_at)->format('d M Y, H:i') }} WIB</span>
+                            </div>
+                        </div>
                     @endif
 
                     @if($ticket->status == 'Closed')

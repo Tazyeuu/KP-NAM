@@ -21,7 +21,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Endpoint: POST http://it-helpdesk-rsud.test:8080/api/mobile/tickets/resolve
     Route::post('/mobile/tickets/resolve', [MobileTicketController::class, 'resolveTicket']);
 
-    // Rute untuk mengecek profile/token masih valid atau tidak
+    Route::post('/mobile/update-fcm-token', [MobileTicketController::class, 'updateFcmToken']);
+
     Route::get('/mobile/user', function (Request $request) {
         return $request->user();
     });
