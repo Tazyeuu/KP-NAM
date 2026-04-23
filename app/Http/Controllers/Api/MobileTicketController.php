@@ -15,7 +15,13 @@ class MobileTicketController extends Controller
         $tasks = Ticket::whereHas('assignments', function($query) use ($teknisi_id) {
             $query->where('teknisi_id', $teknisi_id);
         })
-        ->with(['category', 'department'])
+        ->with([
+            'category',
+            'department',
+            'logs' => function($query) {
+                $query->orderBy('created_at', 'asc');
+            }
+        ])
         ->get();
 
         return response()->json([
@@ -84,14 +90,18 @@ class MobileTicketController extends Controller
 
     public function updateFcmToken(Request $request)
     {
-        $request->validate(['fcm_token' => 'required']);
+        $request->validate([
+            'teknisi_id' => 'required|exists:users,id',
+            'fcm_token' => 'required'
+        ]);
         
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        
-        $user->update(['fcm_token' => $request->fcm_token]);
+        \App\Models\User::where('id', $request->teknisi_id)
+            ->update(['fcm_token' => $request->fcm_token]);
 
-        return response()->json(['message' => 'FCM Token updated successfully']);
+        return response()->json([
+            'success' => true,
+            'message' => 'FCM Token updated successfully'
+        ]);
     }
 
     public static function sendNotificationToTeknisi($user, $title, $body, $ticketId)
@@ -108,6 +118,7 @@ class MobileTicketController extends Controller
             ],
             'data' => [
                 'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                'type' => 'new_assignment',
                 'ticket_id' => (string) $ticketId,
             ]
         ]);

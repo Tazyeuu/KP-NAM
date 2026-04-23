@@ -18,4 +18,5 @@ class Ticket extends Model
     public function assignments() {
         return $this->hasMany(Assignment::class);
     }
+    public function logs() { return $this->hasMany(TicketLog::class); }
 }
