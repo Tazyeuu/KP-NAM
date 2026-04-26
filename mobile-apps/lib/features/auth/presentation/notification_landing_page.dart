@@ -4,6 +4,7 @@ import '../../../core/storage/secure_storage.dart';
 import '../../task/presentation/task_provider.dart';
 import '../../task/presentation/task_list_page.dart';
 import '../../task/presentation/checkin_page.dart';
+import '../../auth/presentation/login_page.dart';
 
 class NotificationLandingPage extends StatefulWidget {
   final int ticketId;
@@ -25,41 +26,51 @@ class _NotificationLandingPageState extends State<NotificationLandingPage> {
   }
 
   Future<void> _loadAndNavigate() async {
-    final provider = context.read<TaskProvider>();
-
-    // Fetch semua tasks
+    // Cek token dulu
+    final token = await SecureStorage.getToken();
     final userIdStr = await SecureStorage.getUserId();
-    if (userIdStr == null) {
-      _goToTaskList();
-      return;
-    }
-
-    await provider.fetchMyTasks();
 
     if (!mounted) return;
 
-    // Cari task yang sesuai dengan ticketId dari notifikasi
+    // Token tidak ada → ke login
+    if (token == null || userIdStr == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+      return;
+    }
+
+    final provider = context.read<TaskProvider>();
+    await provider.fetchMyTasks(forceRefresh: true);
+
+    if (!mounted) return;
+
+    // Fetch gagal → ke task list
+    if (provider.taskStatus == TaskStatus.error) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const TaskListPage()),
+      );
+      return;
+    }
+
+    // Cari task yang sesuai
     final task = provider.tasks
         .where((t) => t.id == widget.ticketId)
         .firstOrNull;
 
     if (task != null) {
-      // Task ditemukan — langsung ke CheckinPage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => CheckinPage(task: task)),
       );
     } else {
-      // Task tidak ditemukan — ke TaskListPage saja
-      _goToTaskList();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const TaskListPage()),
+      );
     }
-  }
-
-  void _goToTaskList() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const TaskListPage()),
-    );
   }
 
   @override

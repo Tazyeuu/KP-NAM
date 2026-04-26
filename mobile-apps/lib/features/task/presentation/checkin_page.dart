@@ -44,6 +44,36 @@ class _CheckinPageState extends State<CheckinPage> {
     }
   }
 
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'assigned':
+        return Colors.orange;
+      case 'in progress':
+        return Colors.blue;
+      case 'resolved':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'assigned':
+        return Icons.assignment_ind_outlined;
+      case 'in progress':
+        return Icons.build_outlined;
+      case 'resolved':
+        return Icons.check_circle_outline;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -84,6 +114,7 @@ class _CheckinPageState extends State<CheckinPage> {
                     ),
                     const SizedBox(height: 32),
 
+                    // === Info Pekerjaan ===
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(24),
@@ -101,7 +132,6 @@ class _CheckinPageState extends State<CheckinPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Header
                           Text(
                             'INFORMASI PEKERJAAN',
                             style: TextStyle(
@@ -112,8 +142,6 @@ class _CheckinPageState extends State<CheckinPage> {
                             ),
                           ),
                           const SizedBox(height: 16),
-
-                          // Ticket Number
                           Text(
                             widget.task.ticketNumber,
                             style: TextStyle(
@@ -123,8 +151,6 @@ class _CheckinPageState extends State<CheckinPage> {
                             ),
                           ),
                           const SizedBox(height: 4),
-
-                          // Subject
                           Text(
                             widget.task.subject,
                             style: const TextStyle(
@@ -133,8 +159,6 @@ class _CheckinPageState extends State<CheckinPage> {
                             ),
                           ),
                           const SizedBox(height: 8),
-
-                          // Description
                           Text(
                             widget.task.description,
                             style: TextStyle(
@@ -146,8 +170,6 @@ class _CheckinPageState extends State<CheckinPage> {
                           const SizedBox(height: 20),
                           const Divider(),
                           const SizedBox(height: 20),
-
-                          // Category
                           _buildInfoRow(
                             icon: Icons.category_outlined,
                             iconColor: Colors.purple[800]!,
@@ -155,8 +177,6 @@ class _CheckinPageState extends State<CheckinPage> {
                             text: widget.task.categoryName,
                           ),
                           const SizedBox(height: 16),
-
-                          // Department
                           _buildInfoRow(
                             icon: Icons.meeting_room,
                             iconColor: Colors.orange[800]!,
@@ -164,8 +184,6 @@ class _CheckinPageState extends State<CheckinPage> {
                             text: widget.task.departmentName,
                           ),
                           const SizedBox(height: 16),
-
-                          // Location Detail
                           _buildInfoRow(
                             icon: Icons.location_on_outlined,
                             iconColor: Colors.green[800]!,
@@ -173,8 +191,6 @@ class _CheckinPageState extends State<CheckinPage> {
                             text: widget.task.locationDetail,
                           ),
                           const SizedBox(height: 16),
-
-                          // Koordinat
                           _buildInfoRow(
                             icon: Icons.gps_fixed,
                             iconColor: Colors.blue[800]!,
@@ -185,6 +201,142 @@ class _CheckinPageState extends State<CheckinPage> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 24),
+
+                    // === Riwayat Log ===
+                    if (widget.task.logs.isNotEmpty) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'RIWAYAT TIKET',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[500],
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Timeline
+                            ...widget.task.logs.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final log = entry.value;
+                              final isLast =
+                                  index == widget.task.logs.length - 1;
+                              final color = _getStatusColor(log.statusTo);
+
+                              return IntrinsicHeight(
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Garis timeline
+                                    Column(
+                                      children: [
+                                        Container(
+                                          width: 32,
+                                          height: 32,
+                                          decoration: BoxDecoration(
+                                            color: color.withOpacity(0.15),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            _getStatusIcon(log.statusTo),
+                                            size: 16,
+                                            color: color,
+                                          ),
+                                        ),
+                                        if (!isLast)
+                                          Expanded(
+                                            child: Container(
+                                              width: 2,
+                                              color: Colors.grey[200],
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(width: 12),
+
+                                    // Konten log
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 20,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Status badge
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 3,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: color.withOpacity(0.15),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                log.statusTo,
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: color,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+
+                                            // Catatan
+                                            Text(
+                                              log.note,
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey[700],
+                                                height: 1.4,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+
+                                            // Waktu
+                                            Text(
+                                              _formatDate(log.createdAt),
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey[400],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                   ],
                 ),
               ),
@@ -193,6 +345,10 @@ class _CheckinPageState extends State<CheckinPage> {
             // Tombol Check-in
             Consumer<TaskProvider>(
               builder: (context, provider, _) {
+                // Sembunyikan tombol kalau status sudah In Progress atau Resolved
+                final isActionable =
+                    widget.task.status.toLowerCase() == 'assigned';
+
                 return Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -205,37 +361,86 @@ class _CheckinPageState extends State<CheckinPage> {
                       ),
                     ],
                   ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      icon: provider.isLoading
-                          ? const SizedBox.shrink()
-                          : const Icon(Icons.fingerprint, size: 24),
-                      label: provider.isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text(
-                              'Verifikasi Jarak & Check-in',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                  child: isActionable
+                      ? SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                      onPressed: provider.isLoading ? null : _handleCheckIn,
-                    ),
-                  ),
+                            icon: provider.isLoading
+                                ? const SizedBox.shrink()
+                                : const Icon(Icons.fingerprint, size: 24),
+                            label: provider.isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Verifikasi Jarak & Check-in',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                            onPressed: provider.isLoading
+                                ? null
+                                : _handleCheckIn,
+                          ),
+                        )
+                      : Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color:
+                                widget.task.status.toLowerCase() == 'resolved'
+                                ? Colors.green[50]
+                                : Colors.blue[50],
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color:
+                                  widget.task.status.toLowerCase() == 'resolved'
+                                  ? Colors.green[200]!
+                                  : Colors.blue[200]!,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                widget.task.status.toLowerCase() == 'resolved'
+                                    ? Icons.check_circle
+                                    : Icons.build,
+                                color:
+                                    widget.task.status.toLowerCase() ==
+                                        'resolved'
+                                    ? Colors.green[700]
+                                    : Colors.blue[700],
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                widget.task.status.toLowerCase() == 'resolved'
+                                    ? 'Tugas telah diselesaikan'
+                                    : 'Sedang dalam pengerjaan',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      widget.task.status.toLowerCase() ==
+                                          'resolved'
+                                      ? Colors.green[700]
+                                      : Colors.blue[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                 );
               },
             ),

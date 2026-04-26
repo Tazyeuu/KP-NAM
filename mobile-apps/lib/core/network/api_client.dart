@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -28,6 +29,10 @@ class ApiClient {
           .timeout(const Duration(seconds: 15));
 
       return _handleResponse(response);
+    } on TimeoutException {
+      throw Exception(
+        'Server tidak merespons. Periksa koneksi Anda dan coba lagi.',
+      );
     } on SocketException {
       throw Exception('Tidak ada koneksi internet.');
     } on HttpException {
@@ -57,6 +62,10 @@ class ApiClient {
           .timeout(const Duration(seconds: 15));
 
       return _handleResponse(response);
+    } on TimeoutException {
+      throw Exception(
+        'Server tidak merespons. Periksa koneksi Anda dan coba lagi.',
+      );
     } on SocketException {
       throw Exception('Tidak ada koneksi internet.');
     } on HttpException {
@@ -72,7 +81,6 @@ class ApiClient {
   static Map<String, dynamic> _handleResponse(http.Response response) {
     final decoded = jsonDecode(response.body) as Map<String, dynamic>;
 
-    // Handle 401 — token expired atau tidak valid
     if (response.statusCode == 401) {
       SessionService.handleSessionExpired();
       throw Exception('Sesi Anda telah berakhir. Silakan login ulang.');

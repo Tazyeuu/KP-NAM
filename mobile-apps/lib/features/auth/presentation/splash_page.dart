@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../task/presentation/task_list_page.dart';
 import 'login_page.dart';
+import '../../../core/network/api_client.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../core/storage/secure_storage.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -53,14 +56,34 @@ class _SplashPageState extends State<SplashPage>
 
     if (!mounted) return;
 
-    if (token != null && userId != null) {
-      // Token ada → langsung ke TaskListPage
+    // Tidak ada token → ke login
+    if (token == null || userId == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+      return;
+    }
+
+    // Validasi token ke server
+    try {
+      await ApiClient.get(
+        endpoint: '${AppConstants.tasksEndpoint}/$userId',
+        token: token,
+      );
+
+      if (!mounted) return;
+
+      // Token valid → ke TaskListPage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const TaskListPage()),
       );
-    } else {
-      // Token tidak ada → ke LoginPage
+    } catch (e) {
+      if (!mounted) return;
+
+      // Token invalid/expired → hapus session → ke login
+      await SecureStorage.clearSession();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginPage()),

@@ -12,7 +12,6 @@ class FcmService {
   static final _messaging = FirebaseMessaging.instance;
   static final navigatorKey = GlobalKey<NavigatorState>();
 
-  // Tidak perlu await di main() — jalankan di background
   static void initializeInBackground() {
     _initialize().catchError((e) {});
   }
@@ -35,6 +34,7 @@ class FcmService {
     });
 
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       _navigateFromNotification(message.data);
     });
@@ -60,6 +60,9 @@ class FcmService {
     final context = navigatorKey.currentContext;
     if (context == null) return;
 
+    // Bedakan warna berdasarkan title notifikasi
+    final isRework = notification.title?.contains('Dikembalikan') ?? false;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Column(
@@ -80,7 +83,7 @@ class FcmService {
               ),
           ],
         ),
-        backgroundColor: Colors.green[700],
+        backgroundColor: isRework ? Colors.orange[700] : Colors.green[700],
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 4),
         action: SnackBarAction(
@@ -93,15 +96,13 @@ class FcmService {
   }
 
   static void _navigateFromNotification(Map<String, dynamic> data) {
-    final type = data['type'];
-    if (type != 'new_assignment') return;
-
     final ticketIdStr = data['ticket_id'];
     if (ticketIdStr == null) return;
 
     final ticketId = int.tryParse(ticketIdStr.toString());
     if (ticketId == null) return;
 
+    // Tidak perlu cek type — langsung navigate ke tiket
     navigatorKey.currentState?.pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (_) => NotificationLandingPage(ticketId: ticketId),

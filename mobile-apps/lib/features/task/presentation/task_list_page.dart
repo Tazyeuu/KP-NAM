@@ -14,7 +14,6 @@ class TaskListPage extends StatefulWidget {
 }
 
 class _TaskListPageState extends State<TaskListPage> {
-  // Filter yang dipilih — null berarti Semua
   String? _selectedFilter;
 
   final List<Map<String, String>> _filters = [
@@ -28,6 +27,16 @@ class _TaskListPageState extends State<TaskListPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TaskProvider>().fetchMyTasks();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<TaskProvider>().fetchMyTasks(forceRefresh: true);
+      }
     });
   }
 
@@ -153,7 +162,6 @@ class _TaskListPageState extends State<TaskListPage> {
                           ),
                         ),
                       ),
-                      // Counter jumlah tugas
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -185,19 +193,70 @@ class _TaskListPageState extends State<TaskListPage> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
-                                Icons.task_alt,
-                                size: 64,
-                                color: Colors.grey[300],
+                              Container(
+                                padding: const EdgeInsets.all(32),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  _selectedFilter == null ||
+                                          _selectedFilter!.isEmpty
+                                      ? Icons.task_alt
+                                      : Icons.filter_list_off,
+                                  size: 64,
+                                  color: Colors.grey[400],
+                                ),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 24),
                               Text(
                                 _selectedFilter == null ||
                                         _selectedFilter!.isEmpty
-                                    ? 'Tidak ada tugas saat ini.'
-                                    : 'Tidak ada tugas dengan status ini.',
-                                style: TextStyle(color: Colors.grey[600]),
+                                    ? 'Tidak Ada Tugas'
+                                    : 'Tidak Ada Tugas "${_filters.firstWhere((f) => f['value'] == _selectedFilter)['label']}"',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _selectedFilter == null ||
+                                        _selectedFilter!.isEmpty
+                                    ? 'Anda tidak memiliki tugas saat ini.\nTarik ke bawah untuk memperbarui.'
+                                    : 'Tidak ada tugas dengan status ini.\nCoba filter yang lain.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                  height: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              if (_selectedFilter == null ||
+                                  _selectedFilter!.isEmpty)
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  onPressed: () => context
+                                      .read<TaskProvider>()
+                                      .fetchMyTasks(forceRefresh: true),
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Perbarui'),
+                                )
+                              else
+                                TextButton(
+                                  onPressed: () =>
+                                      setState(() => _selectedFilter = ''),
+                                  child: const Text('Lihat Semua Tugas'),
+                                ),
                             ],
                           ),
                         )

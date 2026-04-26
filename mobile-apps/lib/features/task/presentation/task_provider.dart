@@ -63,7 +63,8 @@ class TaskProvider extends ChangeNotifier {
       }
 
       final tasks = await _repository.getMyTasks(int.parse(userIdStr));
-      _tasks = tasks;
+      _tasks = tasks.where((t) => t.status.toLowerCase() != 'closed').toList()
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       _lastFetchTime = DateTime.now();
       _updateTaskState(TaskStatus.success);
     } catch (e) {
