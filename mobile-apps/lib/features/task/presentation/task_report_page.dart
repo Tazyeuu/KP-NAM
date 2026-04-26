@@ -42,10 +42,8 @@ class _TaskReportPageState extends State<TaskReportPage> {
   }
 
   Future<void> _submitReport() async {
-    // Validasi catatan wajib diisi
     if (!_formKey.currentState!.validate()) return;
 
-    // Konfirmasi sebelum submit
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -67,6 +65,8 @@ class _TaskReportPageState extends State<TaskReportPage> {
       ),
     );
 
+    if (!mounted) return; // ← tambah ini
+
     if (confirm != true) return;
 
     _stopwatch.stop();
@@ -75,7 +75,7 @@ class _TaskReportPageState extends State<TaskReportPage> {
 
     await provider.resolveTicket(
       ticketId: widget.task.id,
-      note: _noteController.text.trim(), // ← pastikan note terkirim
+      note: _noteController.text.trim(),
     );
 
     if (!mounted) return;

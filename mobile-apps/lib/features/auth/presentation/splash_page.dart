@@ -4,7 +4,6 @@ import '../../task/presentation/task_list_page.dart';
 import 'login_page.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/storage/secure_storage.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -56,7 +55,6 @@ class _SplashPageState extends State<SplashPage>
 
     if (!mounted) return;
 
-    // Tidak ada token → ke login
     if (token == null || userId == null) {
       Navigator.pushReplacement(
         context,
@@ -65,7 +63,6 @@ class _SplashPageState extends State<SplashPage>
       return;
     }
 
-    // Validasi token ke server
     try {
       await ApiClient.get(
         endpoint: '${AppConstants.tasksEndpoint}/$userId',
@@ -74,16 +71,15 @@ class _SplashPageState extends State<SplashPage>
 
       if (!mounted) return;
 
-      // Token valid → ke TaskListPage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const TaskListPage()),
       );
     } catch (e) {
-      if (!mounted) return;
+      await SecureStorage.clearSession(); // ← pindah ke sini, sebelum cek mounted
 
-      // Token invalid/expired → hapus session → ke login
-      await SecureStorage.clearSession();
+      if (!mounted) return; // ← cek mounted setelah semua await selesai
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginPage()),
