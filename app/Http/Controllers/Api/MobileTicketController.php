@@ -74,7 +74,7 @@ class MobileTicketController extends Controller
             'ticket_id' => $ticket->id,
             'changed_by' => $request->teknisi_id,
             'status_to' => 'Resolved',
-            'note' => 'Teknisi: Diselesaikan di lokasi.'
+            'note' => $request->note ?? 'Diselesaikan di lokasi.'
         ]);
 
         return response()->json([
@@ -107,21 +107,30 @@ class MobileTicketController extends Controller
     {
         if (!$user->fcm_token) return;
 
-        $messaging = app('firebase.messaging');
-        
-        $message = \Kreait\Firebase\Messaging\CloudMessage::fromArray([
-            'token' => $user->fcm_token,
-            'notification' => [
-                'title' => $title,
-                'body' => $body,
-            ],
-            'data' => [
-                'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
-                'type' => 'new_assignment',
-                'ticket_id' => (string) $ticketId,
-            ]
-        ]);
+        try {
+            $messaging = app('firebase.messaging');
+            
+            $message = \Kreait\Firebase\Messaging\CloudMessage::fromArray([
+                'token' => $user->fcm_token,
+                'notification' => [
+                    'title' => $title,
+                    'body' => $body,
+                ],
+                'data' => [
+                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                    'type' => 'new_assignment',
+                    'ticket_id' => (string) $ticketId,
+                ]
+            ]);
 
-        $messaging->send($message);
+            $messaging->send($message);
+
+        } catch (\Kreait\Firebase\Exception\Messaging\NotFound $e) {
+            $user->update(['fcm_token' => null]);
+            \Illuminate\Support\Facades\Log::warning("FCM Token mati otomatis dihapus untuk user: " . $user->name);
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Gagal mengirim notifikasi FCM: " . $e->getMessage());
+        }
     }
 }

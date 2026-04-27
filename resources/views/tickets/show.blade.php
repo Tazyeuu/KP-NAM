@@ -210,6 +210,12 @@
                                 <span class="text-blue-600 font-semibold">Waktu Selesai</span>
                                 <span class="md:col-span-2 text-gray-800">: {{ Carbon\Carbon::parse($assignment->completed_at)->format('d M Y, H:i') }} WIB</span>
                             </div>
+                            @if(!$ticket->is_verified)
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+                                <span class="text-blue-600 font-semibold">Catatan Teknisi</span>
+                                <span class="md:col-span-2 text-gray-800">: {{ $ticket->logs->last()->note ?? '-' }}</span>
+                            </div>
+                            @endif
                         </div>
                     @endif
 

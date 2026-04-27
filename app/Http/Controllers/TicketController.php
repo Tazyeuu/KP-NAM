@@ -157,8 +157,8 @@ class TicketController extends Controller
 
         \App\Http\Controllers\Api\MobileTicketController::sendNotificationToTeknisi(
             $teknisi, 
-            'Tugas Baru!',
-            'Anda mendapat tugas baru: ' . $ticket->subject . ' di ' . $ticket->department->name,
+            'Tiket Dikembalikan',
+            'Tiket: ' . $ticket->subject . ' di ' . $ticket->department->name . ' dikembalikan oleh pelapor.',
             $ticket->id
         );
 
