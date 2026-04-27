@@ -345,9 +345,7 @@ class _CheckinPageState extends State<CheckinPage> {
             // Tombol Check-in
             Consumer<TaskProvider>(
               builder: (context, provider, _) {
-                // Sembunyikan tombol kalau status sudah In Progress atau Resolved
-                final isActionable =
-                    widget.task.status.toLowerCase() == 'assigned';
+                final status = widget.task.status.toLowerCase();
 
                 return Container(
                   padding: const EdgeInsets.all(24),
@@ -361,7 +359,8 @@ class _CheckinPageState extends State<CheckinPage> {
                       ),
                     ],
                   ),
-                  child: isActionable
+                  child: status == 'assigned'
+                      // Tombol Check-in
                       ? SizedBox(
                           width: double.infinity,
                           height: 56,
@@ -395,47 +394,62 @@ class _CheckinPageState extends State<CheckinPage> {
                                 : _handleCheckIn,
                           ),
                         )
+                      : status == 'in progress'
+                      // Tombol Buat Laporan
+                      ? SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.blue[700],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            icon: const Icon(
+                              Icons.assignment_outlined,
+                              size: 24,
+                            ),
+                            label: const Text(
+                              'Buat Laporan',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      TaskReportPage(task: widget.task),
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      // Banner Resolved
                       : Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color:
-                                widget.task.status.toLowerCase() == 'resolved'
-                                ? Colors.green[50]
-                                : Colors.blue[50],
+                            color: Colors.green[50],
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color:
-                                  widget.task.status.toLowerCase() == 'resolved'
-                                  ? Colors.green[200]!
-                                  : Colors.blue[200]!,
-                            ),
+                            border: Border.all(color: Colors.green[200]!),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                widget.task.status.toLowerCase() == 'resolved'
-                                    ? Icons.check_circle
-                                    : Icons.build,
-                                color:
-                                    widget.task.status.toLowerCase() ==
-                                        'resolved'
-                                    ? Colors.green[700]
-                                    : Colors.blue[700],
+                                Icons.check_circle,
+                                color: Colors.green[700],
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                widget.task.status.toLowerCase() == 'resolved'
-                                    ? 'Tugas telah diselesaikan'
-                                    : 'Sedang dalam pengerjaan',
+                                'Tugas telah diselesaikan',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color:
-                                      widget.task.status.toLowerCase() ==
-                                          'resolved'
-                                      ? Colors.green[700]
-                                      : Colors.blue[700],
+                                  color: Colors.green[700],
                                 ),
                               ),
                             ],

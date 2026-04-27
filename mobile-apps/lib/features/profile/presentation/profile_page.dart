@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../auth/presentation/login_page.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import '../../../core/network/api_client.dart';
-import '../../../core/constants/app_constants.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -484,32 +481,9 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (!mounted) return;
-
     if (confirm != true) return;
 
-    // Hapus FCM token dari server sebelum logout
-    final token = await SecureStorage.getToken();
-    final userIdStr = await SecureStorage.getUserId();
-
-    if (token != null && userIdStr != null) {
-      try {
-        await ApiClient.post(
-          endpoint: AppConstants.updateFcmTokenEndpoint,
-          body: {
-            'teknisi_id': int.parse(userIdStr),
-            'fcm_token': '', // ← kosongkan token di server
-          },
-          token: token,
-        );
-      } catch (_) {
-        // Lanjutkan logout meski gagal hapus token
-      }
-    }
-
-    // Hapus FCM token lokal
-    await FirebaseMessaging.instance.deleteToken();
-
-    // Hapus session lokal
+    // Cukup hapus session auth saja
     await SecureStorage.clearSession();
 
     if (!mounted) return;

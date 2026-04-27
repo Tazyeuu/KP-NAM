@@ -11,7 +11,7 @@ class SecureStorage {
   static const _keyUserName = 'user_name';
   static const _keyUserEmail = 'user_email';
   static const _keyUserId = 'user_id';
-  static const _keyFcmToken = 'fcm_token'; // ← tambah ini
+  static const _keyFcmToken = 'fcm_token';
 
   static Future<void> saveSession({
     required String token,
@@ -37,5 +37,13 @@ class SecureStorage {
       _storage.write(key: _keyFcmToken, value: token);
   static Future<String?> getFcmToken() => _storage.read(key: _keyFcmToken);
 
-  static Future<void> clearSession() => _storage.deleteAll();
+  // Hapus sesi saja, FCM token tetap tersimpan
+  static Future<void> clearSession() async {
+    await Future.wait([
+      _storage.delete(key: _keyToken),
+      _storage.delete(key: _keyUserName),
+      _storage.delete(key: _keyUserEmail),
+      _storage.delete(key: _keyUserId),
+    ]);
+  }
 }
