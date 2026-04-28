@@ -73,7 +73,18 @@ class TicketController extends Controller
      */
     public function show(Ticket $ticket)
     {
-        $teknisi = User::role('teknisi')->get();
+        $teknisi = User::role('teknisi')
+            ->whereDoesntHave('assignments', function ($query) {
+                $query->whereHas('ticket', function ($q) {
+                    $q->whereIn('status', ['Assigned', 'In Progress'])
+                    ->orWhere(function ($q2) {
+                        $q2->where('status', 'Resolved')
+                            ->where('is_verified', false);
+                    });
+                });
+            })
+            ->get();
+
         return view('tickets.show', compact('ticket', 'teknisi'));
     }
 
@@ -84,10 +95,8 @@ class TicketController extends Controller
             'note' => 'nullable|string'
         ]);
 
-        // 1. Update status tiket
         $ticket->update(['status' => 'Assigned']);
 
-        // 2. Catat penugasan di tabel assignments
         $ticket->assignments()->create([
             'teknisi_id' => $request->teknisi_id,
             'note' => 'Admin: ' . ($request->note ?? 'Teknisi ditugaskan oleh Admin.'),

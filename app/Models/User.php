@@ -27,6 +27,9 @@ class User extends Authenticatable
     public function department() {
         return $this->belongsTO(Department::class);
     } 
+    public function assignments() {
+        return $this->hasMany(Assignment::class, 'teknisi_id');
+    }
 
     protected function casts(): array
     {

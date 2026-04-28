@@ -4,6 +4,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
+use App\Models\Ticket;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -13,6 +16,43 @@ Route::get('/', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+Route::get('/dashboard/chart-data', function (Request $request) {
+        $range = $request->query('range', 'all');
+        $query = Ticket::query();
+
+        // Logika Filter Rentang Waktu
+        if ($range === 'today') {
+            $query->whereDate('created_at', Carbon::today());
+        } elseif ($range === 'week') {
+            $query->where('created_at', '>=', Carbon::now()->subDays(7));
+        } elseif ($range === 'month') {
+            $query->where('created_at', '>=', Carbon::now()->subMonth());
+        } elseif ($range === 'year') {
+            $query->where('created_at', '>=', Carbon::now()->subYear());
+        }
+
+        // Eksekusi query untuk mendapatkan data tiket
+        $tickets = $query->with(['department', 'category'])->get();
+
+        // Olah data untuk Bar Chart (Kelompokkan berdasarkan nama departemen)
+        $deptData = $tickets->groupBy('department.name')->map->count();
+        
+        // Olah data untuk Pie Chart (Kelompokkan berdasarkan nama kategori)
+        $catData = $tickets->groupBy('category.name')->map->count();
+
+        // Kembalikan dalam format JSON yang siap dibaca oleh Chart.js
+        return response()->json([
+            'departments' => [
+                'labels' => $deptData->keys(),
+                'values' => $deptData->values(),
+            ],
+            'categories' => [
+                'labels' => $catData->keys(),
+                'values' => $catData->values(),
+            ]
+        ]);
+    })->middleware(['auth']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

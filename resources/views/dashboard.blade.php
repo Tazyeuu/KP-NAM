@@ -59,27 +59,96 @@
                     </div>
                 </div>
 
-                <div class="flex flex-col md:flex-row gap-3 mb-6">
-                    <select class="border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-blue-500">
-                        <option>Semua Status</option>
-                        <option>Open</option>
-                        <option>Assigned</option>
-                        <option>In Progress</option>
-                        <option>Resolved</option>
-                        <option>Closed</option>
+                <div class="flex mb-4" x-data="dashboardCharts()">
+                    <select @change="updateCharts($event.target.value)" class="border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-blue-500 bg-white shadow-sm cursor-pointer">
+                        <option value="all">Semua Waktu</option>
+                        <option value="today">1 Hari Terakhir</option>
+                        <option value="week">1 Minggu Terakhir</option>
+                        <option value="month">1 Bulan Terakhir</option>
+                        <option value="year">1 Tahun Terakhir</option>
                     </select>
-                    <select class="border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-blue-500">
-                        <option>Semua Kategori</option>
-                        <option value="">Jaringan</option>
-                        <option value="">Software</option>
-                        <option value="">Hardware</option>
-                    </select>
-                    <select class="border-gray-200 rounded-lg text-sm text-gray-600 focus:ring-blue-500">
-                        <option>Semua Prioritas</option>
-                        <option>High</option>
-                        <option>Medium</option>
-                        <option>Low</option>
-                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="lg:col-span-2 bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+                        <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">Distribusi Laporan</h3>
+                        <div class="relative h-72 w-full">
+                            <canvas id="departmentChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+                        <h3 class="font-bold text-gray-800 mb-4 border-b pb-2">Komposisi Kategori Kendala</h3>
+                        <div class="relative h-64 w-full flex justify-center">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-100 rounded-xl shadow-sm mb-8 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-800">Status Teknisi Lapangan</h3>
+                        <span class="bg-blue-100 text-blue-600 text-xs px-3 py-1.5 rounded-full font-semibold flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                            {{ $activeWorkers->count() }} Teknisi Aktif
+                        </span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-white text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100">
+                                    <th class="px-6 py-4 font-medium">Nama Teknisi</th>
+                                    <th class="px-6 py-4 font-medium">Tiket & Kendala</th>
+                                    <th class="px-6 py-4 font-medium">Lokasi Ruangan</th>
+                                    <th class="px-6 py-4 font-medium">Status & Durasi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-sm">
+                                @forelse($activeWorkers as $work)
+                                <tr class="hover:bg-gray-50/50 transition">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <span class="font-semibold text-gray-800">{{ $work->teknisi->name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <a href="{{ route('tickets.show', $work->ticket->id) }}" class="text-blue-600 hover:text-blue-800 font-medium block mb-0.5">
+                                            {{ $work->ticket->ticket_number }}
+                                        </a>
+                                        <span class="text-gray-500 text-xs line-clamp-1" title="{{ $work->ticket->subject }}">{{ $work->ticket->subject }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-600 font-medium">
+                                        <div class="flex items-center gap-1.5">
+                                            {{ $work->ticket->department->name }}
+                                        </div>
+                                        <div class="text-xs text-gray-400 flex items-center gap-1">
+                                            {{ $work->ticket->location_detail }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        @if($work->ticket->status == 'In Progress')
+                                            <span class="bg-pink-50 text-pink-500 border border-pink-100 text-xs px-2.5 py-1 rounded-md font-semibold inline-block mb-1">Sedang Dikerjakan</span>
+                                        @elseif($work->ticket->status == 'Resolved' && !$work->ticket->is_verified)
+                                            <span class="bg-green-50 text-green-500 border border-green-100 text-xs px-2.5 py-1 rounded-md font-semibold inline-block mb-1 animate-pulse">Menunggu Verifikasi</span>
+                                        @else
+                                            <span class="bg-orange-50 text-orange-500 border border-orange-100 text-xs px-2.5 py-1 rounded-md font-semibold inline-block mb-1">Menuju Lokasi</span>
+                                        @endif
+                                        <div class="text-xs text-gray-400 flex items-center gap-1">
+                                            Ditugaskan {{ $work->created_at->diffForHumans() }}
+                                        </div>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="4" class="px-6 py-8 text-center text-gray-500 bg-gray-50/30">
+                                        <svg class="w-8 h-8 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                                        Saat ini tidak ada teknisi yang sedang bertugas di lapangan.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -88,7 +157,6 @@
                             <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition">
                                 <div class="flex justify-between items-start mb-3">
                                     <span class="text-xs text-gray-400">{{ $ticket->ticket_number }}</span>
-                                    {{-- Logika Warna Badge Status --}}
                                     @php
                                         $statusColor = match($ticket->status) {
                                             'Open' => 'bg-blue-50/50 border border-blue-100 text-blue-500',
@@ -107,7 +175,6 @@
                                 
                                 <div class="flex gap-2 mb-4">
                                     <span class="bg-indigo-50 text-indigo-600 border border-indigo-100 text-xs px-2 py-1 rounded">{{ $ticket->category->name }}</span>
-                                    {{-- Logika Warna Badge Prioritas --}}
                                     @php
                                         $priorityColor = match($ticket->priority) {
                                             'High' => 'bg-red-50 text-red-600 border-red-100',
@@ -418,4 +485,91 @@
 
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('dashboardCharts', () => ({
+                deptChartInstance: null,
+                catChartInstance: null,
+
+                init() {
+                    // Inisialisasi Chart saat halaman pertama kali dimuat
+                    this.renderCharts('all');
+                },
+
+                async updateCharts(timeframe) {
+                    // Hapus chart lama sebelum membuat yang baru
+                    if (this.deptChartInstance) this.deptChartInstance.destroy();
+                    if (this.catChartInstance) this.catChartInstance.destroy();
+                    
+                    this.renderCharts(timeframe);
+                },
+
+                async renderCharts(timeframe) {
+                    try {
+                        // Minta data ke server berdasarkan rentang waktu
+                        const response = await fetch(`/dashboard/chart-data?range=${timeframe}`);
+                        const data = await response.json();
+
+                        // === RENDER BAR CHART (DEPARTEMEN) ===
+                        const ctxDept = document.getElementById('departmentChart').getContext('2d');
+                        this.deptChartInstance = new Chart(ctxDept, {
+                            type: 'bar',
+                            data: {
+                                labels: data.departments.labels,
+                                datasets: [{
+                                    label: 'Jumlah Laporan',
+                                    data: data.departments.values,
+                                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                    borderRadius: 6,
+                                    barThickness: 'flex',
+                                    maxBarThickness: 40
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                                },
+                                plugins: {
+                                    legend: { display: false }
+                                }
+                            }
+                        });
+
+                        // === RENDER DOUGHNUT/PIE CHART (KATEGORI) ===
+                        const ctxCat = document.getElementById('categoryChart').getContext('2d');
+                        this.catChartInstance = new Chart(ctxCat, {
+                            type: 'doughnut', 
+                            data: {
+                                labels: data.categories.labels,
+                                datasets: [{
+                                    data: data.categories.values,
+                                    backgroundColor: [
+                                        'rgba(16, 185, 129, 0.8)',
+                                        'rgba(245, 158, 11, 0.8)',
+                                        'rgba(99, 102, 241, 0.8)'
+                                    ],
+                                    borderWidth: 0,
+                                    hoverOffset: 4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { position: 'bottom' }
+                                },
+                                cutout: '0%'
+                            }
+                        });
+
+                    } catch (error) {
+                        console.error("Gagal memuat data chart:", error);
+                    }
+                }
+            }));
+        });
+    </script>
 </x-app-layout>

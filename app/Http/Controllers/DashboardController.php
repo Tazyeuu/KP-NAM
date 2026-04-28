@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Ticket;
 use Illuminate\Support\Facades\Auth;
+use \App\Models\Assignment;
 
 class DashboardController extends Controller
 {
@@ -20,8 +21,20 @@ class DashboardController extends Controller
 
             $tickets = Ticket::with(['user', 'department', 'category'])->latest()->get();
 
+            $activeWorkers = Assignment::with(['teknisi', 'ticket.department'])
+                ->whereHas('ticket', function($q) {
+                    $q->whereIn('status', ['Assigned', 'In Progress'])
+                    ->orWhere(function($q2) {
+                        $q2->where('status', 'Resolved')
+                            ->where('is_verified', false);
+                    });
+                })
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->unique('teknisi_id');
+
             return view('dashboard', compact(
-                'openTickets', 'assignedTickets', 'inProgressTickets', 'resolvedTickets', 'closedTickets', 'tickets'
+                'openTickets', 'assignedTickets', 'inProgressTickets', 'resolvedTickets', 'closedTickets', 'tickets', 'activeWorkers'
             ));
         }
 
@@ -41,7 +54,7 @@ class DashboardController extends Controller
             $userTickets = Ticket::where('user_id', $user->id)
                                 ->with('category')
                                 ->latest()
-                                ->take(3) 
+                                ->take(5) 
                                 ->get();
 
             return view('dashboard', compact('userTickets'));
