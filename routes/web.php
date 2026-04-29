@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ReportController;
 
 Route::get('/', function () {
     return view('auth/login');
@@ -80,6 +81,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/tickets/{ticket}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
         Route::post('/tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
         Route::resource('users', UserController::class)->except(['show']);
+        Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
     });
 });
 

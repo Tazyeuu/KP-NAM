@@ -85,6 +85,23 @@
                     </div>
                 </div>
 
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+                    <h3 class="font-bold text-gray-800 mb-4">Cetak Laporan</h3>
+                    <form action="{{ route('reports.export-pdf') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Dari Tanggal</label>
+                            <input type="date" name="start_date" required class="border-gray-200 rounded-lg text-sm focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">Sampai Tanggal</label>
+                            <input type="date" name="end_date" required class="border-gray-200 rounded-lg text-sm focus:ring-blue-500">
+                        </div>
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2">
+                            Cetak Laporan
+                        </button>
+                    </form>
+                </div>
+
                 <div class="bg-white border border-gray-100 rounded-xl shadow-sm mb-8 overflow-hidden">
                     <div class="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                         <h3 class="font-bold text-gray-800">Status Teknisi Lapangan</h3>
@@ -129,7 +146,7 @@
                                         @if($work->ticket->status == 'In Progress')
                                             <span class="bg-pink-50 text-pink-500 border border-pink-100 text-xs px-2.5 py-1 rounded-md font-semibold inline-block mb-1">Sedang Dikerjakan</span>
                                         @elseif($work->ticket->status == 'Resolved' && !$work->ticket->is_verified)
-                                            <span class="bg-green-50 text-green-500 border border-green-100 text-xs px-2.5 py-1 rounded-md font-semibold inline-block mb-1 animate-pulse">Menunggu Verifikasi</span>
+                                            <span class="bg-green-50 text-green-500 border border-green-100 text-xs px-2.5 py-1 rounded-md font-semibold inline-block mb-1">Menunggu Verifikasi</span>
                                         @else
                                             <span class="bg-orange-50 text-orange-500 border border-orange-100 text-xs px-2.5 py-1 rounded-md font-semibold inline-block mb-1">Menuju Lokasi</span>
                                         @endif
@@ -511,7 +528,7 @@
                         const response = await fetch(`/dashboard/chart-data?range=${timeframe}`);
                         const data = await response.json();
 
-                        // === RENDER BAR CHART (DEPARTEMEN) ===
+                        // === RENDER BAR CHART ===
                         const ctxDept = document.getElementById('departmentChart').getContext('2d');
                         this.deptChartInstance = new Chart(ctxDept, {
                             type: 'bar',
@@ -538,7 +555,7 @@
                             }
                         });
 
-                        // === RENDER DOUGHNUT/PIE CHART (KATEGORI) ===
+                        // === RENDER PIE CHART ===
                         const ctxCat = document.getElementById('categoryChart').getContext('2d');
                         this.catChartInstance = new Chart(ctxCat, {
                             type: 'doughnut', 
