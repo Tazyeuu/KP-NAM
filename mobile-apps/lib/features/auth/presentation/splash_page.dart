@@ -112,10 +112,10 @@ class _SplashPageState extends State<SplashPage>
                   color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.local_hospital_rounded,
-                  size: 80,
-                  color: Colors.white,
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: 120,
+                  height: 120,
                 ),
               ),
               const SizedBox(height: 24),

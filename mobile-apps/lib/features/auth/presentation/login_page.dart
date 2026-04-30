@@ -68,10 +68,10 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    Icons.local_hospital_rounded,
-                    size: 80,
-                    color: colorScheme.primary,
+                  Image.asset(
+                    'assets/images/logo.png',
+                    width: 120,
+                    height: 120,
                   ),
                   const SizedBox(height: 16),
                   Text(

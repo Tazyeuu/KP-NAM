@@ -1,4 +1,4 @@
-name: kp
+name: helpdesk_teknisi
 description: "Helpdesk Teknisi RSUD dr. Soedarso"
 publish_to: "none"
 version: 1.0.0+1
@@ -43,3 +43,10 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/icon/
+    - assets/images/
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/app_icon.png"
