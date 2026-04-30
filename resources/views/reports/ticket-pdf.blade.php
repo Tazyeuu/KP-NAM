@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Laporan Layanan IT RSUD Dr. Soedarso</title>
+    <title>Laporan Layanan IT RSUD dr. Soedarso</title>
     <style>
         body { font-family: sans-serif; font-size: 12px; }
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
@@ -14,7 +14,7 @@
 <body>
     <div class="header">
         <h2>REKAPITULASI LAYANAN IT</h2>
-        <h3>RSUD Dr. Soedarso</h3>
+        <h3>RSUD dr. Soedarso</h3>
         <p>Periode: {{ $start_date }} s/d {{ $end_date }}</p>
     </div>
 
