@@ -1,13 +1,14 @@
 {
+  "_README": "Copy file ini menjadi google-services.json dan isi dengan kredensial dari Firebase Console.",
   "project_info": {
-    "project_number": "666297712641",
-    "project_id": "helpdesk-rsud-soedarso",
-    "storage_bucket": "helpdesk-rsud-soedarso.firebasestorage.app"
+    "project_number": "YOUR_PROJECT_NUMBER",
+    "project_id": "YOUR_PROJECT_ID",
+    "storage_bucket": "YOUR_STORAGE_BUCKET"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:666297712641:android:b57cde59dec8266f96c000",
+        "mobilesdk_app_id": "YOUR_MOBILE_SDK_APP_ID",
         "android_client_info": {
           "package_name": "com.rsud.soedarso.helpdesk"
         }
@@ -15,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyB4nTiMtn0RdW0VyRGq8y9ujNQ42JZsfCc"
+          "current_key": "YOUR_FIREBASE_API_KEY"
         }
       ],
       "services": {
