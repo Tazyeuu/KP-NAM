@@ -100,7 +100,7 @@
         <p>Dicetak pada: {{ $generated_at }}</p>
         <br><br><br>
         <p>(_______________________)</p>
-        <p>Admin IT RSUD Dr. Soedarso</p>
+        <p>Admin IT RSUD dr. Soedarso</p>
     </div>
 </body>
 </html>
