@@ -260,9 +260,11 @@ Aplikasi ini berkomunikasi dengan backend melalui endpoint berikut:
 
 ## 👥 Tim Pengembang
 
-| Nama     | Role                       |
-| -------- | -------------------------- |
-| **Tann** | Mobile Developer (Flutter) |
+| Nama                       | Role              |
+| -------------------------- | ----------------- |
+| **Tan Rafly**              | Mobile Developer  |
+| **Muhammad Fauzi**         | Web Developer     |
+| **Muhammad Iqbal Maulana** | Chatbot Developer |
 
 > 📍 Dikembangkan sebagai proyek **Kerja Praktik (KP)** untuk **RSUD dr. Soedarso Pontianak**.
 
