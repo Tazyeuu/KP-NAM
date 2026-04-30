@@ -135,7 +135,7 @@ class _TaskListPageState extends State<TaskListPage> {
                                   },
                                   selectedColor: Theme.of(
                                     context,
-                                  ).colorScheme.primary.withOpacity(0.15),
+                                  ).colorScheme.primary.withValues(alpha: 0.15),
                                   checkmarkColor: Theme.of(
                                     context,
                                   ).colorScheme.primary,
@@ -170,7 +170,7 @@ class _TaskListPageState extends State<TaskListPage> {
                         decoration: BoxDecoration(
                           color: Theme.of(
                             context,
-                          ).colorScheme.primary.withOpacity(0.1),
+                          ).colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -271,7 +271,7 @@ class _TaskListPageState extends State<TaskListPage> {
                               return Card(
                                 elevation: 2,
                                 margin: const EdgeInsets.only(bottom: 16),
-                                shadowColor: Colors.black.withOpacity(0.1),
+                                shadowColor: Colors.black.withValues(alpha: 0.1),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
@@ -331,7 +331,7 @@ class _TaskListPageState extends State<TaskListPage> {
                                                 color: Theme.of(context)
                                                     .colorScheme
                                                     .primary
-                                                    .withOpacity(0.1),
+                                                    .withValues(alpha: 0.1),
                                                 borderRadius:
                                                     BorderRadius.circular(8),
                                               ),

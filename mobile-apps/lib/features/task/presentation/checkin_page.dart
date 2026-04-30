@@ -102,7 +102,7 @@ class _CheckinPageState extends State<CheckinPage> {
                       child: Container(
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withOpacity(0.1),
+                          color: colorScheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -123,7 +123,7 @@ class _CheckinPageState extends State<CheckinPage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -213,7 +213,7 @@ class _CheckinPageState extends State<CheckinPage> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -252,7 +252,7 @@ class _CheckinPageState extends State<CheckinPage> {
                                           width: 32,
                                           height: 32,
                                           decoration: BoxDecoration(
-                                            color: color.withOpacity(0.15),
+                                            color: color.withValues(alpha: 0.15),
                                             shape: BoxShape.circle,
                                           ),
                                           child: Icon(
@@ -290,7 +290,7 @@ class _CheckinPageState extends State<CheckinPage> {
                                                     vertical: 3,
                                                   ),
                                               decoration: BoxDecoration(
-                                                color: color.withOpacity(0.15),
+                                                color: color.withValues(alpha: 0.15),
                                                 borderRadius:
                                                     BorderRadius.circular(6),
                                               ),
@@ -353,7 +353,7 @@ class _CheckinPageState extends State<CheckinPage> {
                     color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, -4),
                       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../auth/presentation/login_page.dart';
+import '../../task/presentation/task_history_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -14,8 +15,8 @@ class _ProfilePageState extends State<ProfilePage> {
   String _userEmail = '';
   bool _isLoadingProfile = true;
 
-  // Notifikasi — simpan lokal dulu, nanti disambung FCM
-  bool _notifEnabled = true;
+  // Preferensi notifikasi — disimpan di SecureStorage, FCM selalu aktif
+  bool _notifInApp = true;
 
   @override
   void initState() {
@@ -26,10 +27,12 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfile() async {
     final name = await SecureStorage.getUserName();
     final email = await SecureStorage.getUserEmail();
+    final inApp = await SecureStorage.getNotifInApp();
 
     setState(() {
       _userName = name ?? 'Teknisi';
       _userEmail = email ?? '-';
+      _notifInApp = inApp;
       _isLoadingProfile = false;
     });
   }
@@ -43,9 +46,25 @@ class _ProfilePageState extends State<ProfilePage> {
     return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 
+  /// Simpan preferensi dan tampilkan feedback
+  Future<void> _saveNotifPreference(String key, bool value) async {
+    switch (key) {
+      case 'inApp':
+        await SecureStorage.saveNotifInApp(value);
+        break;
+      case 'sound':
+        await SecureStorage.saveNotifSound(value);
+        break;
+      case 'vibrate':
+        await SecureStorage.saveNotifVibrate(value);
+        break;
+    }
+  }
+
   void _showNotifSettings() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -77,83 +96,80 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Kelola notifikasi yang Anda terima.',
+                    'Atur preferensi notifikasi yang Anda terima di dalam aplikasi.',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
-                  // Toggle Notifikasi
+                  // Info: FCM selalu aktif
                   Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 16,
+                          color: Colors.green[700],
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Push notification selalu aktif. Anda akan selalu menerima notifikasi penugasan baru.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.green[700],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Banner Dalam Aplikasi
+                  _buildNotifToggle(
+                    setModalState: setModalState,
+                    icon: Icons.notifications_active_outlined,
+                    title: 'Banner Dalam Aplikasi',
+                    subtitle: _notifInApp
+                        ? 'Tampilkan banner saat ada notif baru di dalam app'
+                        : 'Banner tidak akan muncul saat app sedang dibuka',
+                    value: _notifInApp,
+                    onChanged: (value) {
+                      setModalState(() => _notifInApp = value);
+                      setState(() => _notifInApp = value);
+                      _saveNotifPreference('inApp', value);
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Info pengaturan suara & getar
+                  Container(
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.grey[50],
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey[200]!),
-                    ),
-                    child: SwitchListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                      secondary: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: _notifEnabled
-                              ? Theme.of(
-                                  context,
-                                ).colorScheme.primary.withOpacity(0.1)
-                              : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          _notifEnabled
-                              ? Icons.notifications_active
-                              : Icons.notifications_off,
-                          color: _notifEnabled
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey[500],
-                        ),
-                      ),
-                      title: const Text(
-                        'Notifikasi Penugasan',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Text(
-                        _notifEnabled
-                            ? 'Anda akan menerima notifikasi saat ada tugas baru'
-                            : 'Notifikasi dimatikan',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                      ),
-                      value: _notifEnabled,
-                      onChanged: (value) {
-                        setModalState(() => _notifEnabled = value);
-                        setState(() => _notifEnabled = value);
-                        // TODO: Nanti sambungkan ke FCM
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Info FCM coming soon
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.info_outline,
                           size: 16,
-                          color: Colors.blue[700],
+                          color: Colors.grey[500],
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Notifikasi real-time akan segera tersedia.',
+                            'Pengaturan suara dan getar diatur melalui pengaturan notifikasi sistem HP Anda.',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.blue[700],
+                              color: Colors.grey[500],
                             ),
                           ),
                         ),
@@ -168,6 +184,53 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       },
     );
+  }
+
+  Widget _buildNotifToggle({
+    required StateSetter setModalState,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: SwitchListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        secondary: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: value
+                ? colorScheme.primary.withValues(alpha: 0.1)
+                : Colors.grey[200],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            color: value ? colorScheme.primary : Colors.grey[500],
+          ),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+        ),
+        value: value,
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  /// Label ringkasan untuk subtitle menu notifikasi
+  String get _notifSummary {
+    return _notifInApp ? 'Banner aktif' : 'Banner nonaktif';
   }
 
   void _showAboutApp() {
@@ -211,7 +274,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         decoration: BoxDecoration(
                           color: Theme.of(
                             context,
-                          ).colorScheme.primary.withOpacity(0.1),
+                          ).colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -367,7 +430,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -435,7 +498,7 @@ class _ProfilePageState extends State<ProfilePage> {
             margin: const EdgeInsets.only(top: 2),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -443,7 +506,7 @@ class _ProfilePageState extends State<ProfilePage> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: color.withOpacity(0.8),
+                color: color.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -538,7 +601,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             border: Border.all(color: Colors.white, width: 3),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -586,7 +649,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Text(
@@ -609,10 +672,24 @@ class _ProfilePageState extends State<ProfilePage> {
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Column(
                       children: [
+                        // Menu Riwayat Tugas
+                        _buildMenuCard(
+                          icon: Icons.history,
+                          title: 'Riwayat Tugas',
+                          subtitle: 'Log pekerjaan yang telah diselesaikan',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const TaskHistoryPage(),
+                              ),
+                            );
+                          },
+                        ),
                         _buildMenuCard(
                           icon: Icons.notifications_none,
                           title: 'Pengaturan Notifikasi',
-                          subtitle: _notifEnabled ? 'Aktif' : 'Nonaktif',
+                          subtitle: _notifSummary,
                           onTap: _showNotifSettings,
                         ),
                         _buildMenuCard(
@@ -673,7 +750,7 @@ class _ProfilePageState extends State<ProfilePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

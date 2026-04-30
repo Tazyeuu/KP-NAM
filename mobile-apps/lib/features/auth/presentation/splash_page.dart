@@ -109,7 +109,7 @@ class _SplashPageState extends State<SplashPage>
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -144,7 +144,7 @@ class _SplashPageState extends State<SplashPage>
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   strokeWidth: 2,
                 ),
               ),

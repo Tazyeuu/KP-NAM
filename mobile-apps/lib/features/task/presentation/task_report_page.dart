@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../domain/model/task_model.dart';
+import '../../../core/storage/secure_storage.dart';
 import 'task_provider.dart';
 import 'task_list_page.dart';
 
@@ -17,19 +18,45 @@ class _TaskReportPageState extends State<TaskReportPage> {
   final _noteController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  final Stopwatch _stopwatch = Stopwatch();
   late final Stream<int> _timerStream;
+
+  /// Waktu mulai pengerjaan — diambil dari SecureStorage agar persist
+  DateTime? _startTime;
+  bool _isTimerReady = false;
 
   @override
   void initState() {
     super.initState();
-    _stopwatch.start();
     _timerStream = Stream.periodic(const Duration(seconds: 1), (tick) => tick);
+    _initTimer();
+  }
+
+  /// Ambil atau buat start time di SecureStorage
+  Future<void> _initTimer() async {
+    final ticketId = widget.task.id;
+    DateTime? saved = await SecureStorage.getTimerStart(ticketId);
+
+    if (saved == null) {
+      // Pertama kali masuk → simpan waktu sekarang
+      saved = DateTime.now();
+      await SecureStorage.saveTimerStart(ticketId, saved);
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _startTime = saved;
+      _isTimerReady = true;
+    });
+  }
+
+  Duration get _elapsed {
+    if (_startTime == null) return Duration.zero;
+    return DateTime.now().difference(_startTime!);
   }
 
   @override
   void dispose() {
-    _stopwatch.stop();
     _noteController.dispose();
     super.dispose();
   }
@@ -65,11 +92,9 @@ class _TaskReportPageState extends State<TaskReportPage> {
       ),
     );
 
-    if (!mounted) return; // ← tambah ini
+    if (!mounted) return;
 
     if (confirm != true) return;
-
-    _stopwatch.stop();
 
     final provider = context.read<TaskProvider>();
 
@@ -81,6 +106,11 @@ class _TaskReportPageState extends State<TaskReportPage> {
     if (!mounted) return;
 
     if (provider.isResolved) {
+      // Bersihkan timer dari storage setelah berhasil
+      await SecureStorage.clearTimerStart(widget.task.id);
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Laporan berhasil dikirim! Pekerjaan Selesai.'),
@@ -94,7 +124,6 @@ class _TaskReportPageState extends State<TaskReportPage> {
         (route) => false,
       );
     } else if (provider.resolveError.isNotEmpty) {
-      _stopwatch.start();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(provider.resolveError),
@@ -135,10 +164,10 @@ class _TaskReportPageState extends State<TaskReportPage> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withOpacity(0.05),
+                          color: colorScheme.primary.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: colorScheme.primary.withOpacity(0.2),
+                            color: colorScheme.primary.withValues(alpha: 0.2),
                           ),
                         ),
                         child: Row(
@@ -183,7 +212,7 @@ class _TaskReportPageState extends State<TaskReportPage> {
                       ),
                       const SizedBox(height: 24),
 
-                      // === Stopwatch ===
+                      // === Timer ===
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(24),
@@ -192,7 +221,7 @@ class _TaskReportPageState extends State<TaskReportPage> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -220,23 +249,32 @@ class _TaskReportPageState extends State<TaskReportPage> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            StreamBuilder<int>(
-                              stream: _timerStream,
-                              builder: (context, snapshot) {
-                                final duration = _stopwatch.elapsed;
-                                return Text(
-                                  _formatDuration(duration),
-                                  style: TextStyle(
-                                    fontSize: 48,
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.primary,
+                            _isTimerReady
+                                ? StreamBuilder<int>(
+                                    stream: _timerStream,
+                                    builder: (context, snapshot) {
+                                      return Text(
+                                        _formatDuration(_elapsed),
+                                        style: TextStyle(
+                                          fontSize: 48,
+                                          fontWeight: FontWeight.bold,
+                                          color: colorScheme.primary,
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : SizedBox(
+                                    height: 48,
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        color: colorScheme.primary,
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
                                   ),
-                                );
-                              },
-                            ),
                             const SizedBox(height: 8),
                             Text(
-                              'Timer dimulai saat check-in berhasil',
+                              'Timer berjalan sejak check-in pertama',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[400],
@@ -315,7 +353,7 @@ class _TaskReportPageState extends State<TaskReportPage> {
                     color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, -4),
                       ),

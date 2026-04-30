@@ -146,6 +146,7 @@ class TaskProvider extends ChangeNotifier {
         ticketId: task.id,
         teknisiId: int.parse(userIdStr),
       );
+      await SecureStorage.saveTimerStart(task.id, DateTime.now());
 
       // 6. Invalidate cache agar list tugas ter-refresh
       _lastFetchTime = null;
@@ -222,5 +223,18 @@ class TaskProvider extends ChangeNotifier {
     this.isSuccess = isSuccess;
     checkInError = error;
     notifyListeners();
+  }
+
+  /// Fetch semua tugas termasuk resolved/closed — untuk halaman riwayat
+  Future<List<TaskModel>> fetchAllTasksForHistory() async {
+    final userIdStr = await SecureStorage.getUserId();
+    if (userIdStr == null) {
+      throw Exception('Sesi tidak valid. Silakan login ulang.');
+    }
+
+    final tasks = await _repository.getMyTasks(int.parse(userIdStr));
+    // Urutkan dari yang terbaru
+    tasks.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    return tasks;
   }
 }

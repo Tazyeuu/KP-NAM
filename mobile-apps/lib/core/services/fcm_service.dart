@@ -53,17 +53,23 @@ class FcmService {
     }
   }
 
-  static void _handleForegroundMessage(RemoteMessage message) {
+  static void _handleForegroundMessage(RemoteMessage message) async {
     final notification = message.notification;
     if (notification == null) return;
 
-    final context = navigatorKey.currentContext;
-    if (context == null) return;
+    // Cek preferensi: apakah tampilkan banner dalam aplikasi
+    final showInApp = await SecureStorage.getNotifInApp();
+    if (!showInApp) return;
+
+    // Ambil context setelah await selesai — aman karena pakai GlobalKey
+    final ctx = navigatorKey.currentContext;
+    if (ctx == null) return;
 
     // Bedakan warna berdasarkan title notifikasi
     final isRework = notification.title?.contains('Dikembalikan') ?? false;
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(ctx).showSnackBar(
       SnackBar(
         content: Column(
           mainAxisSize: MainAxisSize.min,
