@@ -202,8 +202,9 @@ class TicketController extends Controller
         }
 
         $categories = Category::all(); 
+        $priorities = ['Low', 'Medium', 'High'];
 
-        return view('tickets.edit', compact('ticket', 'categories'));
+        return view('tickets.edit', compact('ticket', 'categories', 'priorities'));
     }
 
     /**

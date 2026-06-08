@@ -3,11 +3,11 @@
 <head>
     <title>Laporan Layanan IT RSUD dr. Soedarso</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; }
+        body { font-family: sans-serif; font-size: 11px; } /* Ukuran font diperkecil sedikit agar 7 kolom muat */
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { bg-color: #f2f2f2; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; vertical-align: top; }
+        th { background-color: #f2f2f2; }
         .status-badge { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
     </style>
 </head>
@@ -26,8 +26,8 @@
         <table style="margin-bottom: 15px;">
             <thead>
                 <tr>
-                    <th style="background-color: #f2f2f2; width: 40%;">Kategori Kendala</th>
-                    <th style="background-color: #f2f2f2;">Total</th>
+                    <th style="width: 40%;">Kategori Kendala</th>
+                    <th>Total</th>
                 </tr>
             </thead>
             <tbody>
@@ -43,9 +43,9 @@
         <table>
             <thead>
                 <tr>
-                    <th style="background-color: #f2f2f2;">Unit / Departemen</th>
-                    <th style="background-color: #f2f2f2; width: 20%; text-align: center;">Total Keluhan</th>
-                    <th style="background-color: #f2f2f2; width: 40%;">Rincian per Kategori</th>
+                    <th>Unit / Departemen</th>
+                    <th style="width: 20%; text-align: center;">Total Keluhan</th>
+                    <th style="width: 40%;">Rincian per Kategori</th>
                 </tr>
             </thead>
             <tbody>
@@ -70,26 +70,56 @@
     <table>
         <thead>
             <tr>
-                <th>No Tiket</th>
-                <th>Tgl Masuk</th>
-                <th>Pelapor/Unit</th>
-                <th>Masalah</th>
-                <th>Teknisi</th>
+                <th style="width: 12%;">Waktu Masuk</th>
+                <th style="width: 18%;">Pelapor / Unit</th>
+                <th style="width: 20%;">Masalah</th>
+                <th style="width: 10%;">Teknisi</th>
+                <th style="width: 12%;">Waktu Mulai</th>
+                <th style="width: 12%;">Waktu Selesai</th>
+                <th style="width: 16%;">Durasi Penyelesaian</th>
             </tr>
         </thead>
         <tbody>
             @foreach($tickets as $ticket)
+                @php
+                    // Mengambil data penugasan TERAKHIR (antisipasi jika ada Rework)
+                    $assignment = $ticket->assignments->last();
+                    
+                    $startedAt = $assignment && $assignment->started_at ? \Carbon\Carbon::parse($assignment->started_at) : null;
+                    $completedAt = $assignment && $assignment->completed_at ? \Carbon\Carbon::parse($assignment->completed_at) : null;
+                    $createdAt = \Carbon\Carbon::parse($ticket->created_at);
+                    
+                    $durasiString = '-';
+                    
+                    // Hitung durasi menggunakan total menit lalu dibagi manual (LEBIH AMAN)
+                    if ($completedAt) {
+                        // Dapatkan total seluruh menit dari awal sampai akhir
+                        $totalMinutes = $createdAt->diffInMinutes($completedAt);
+                        
+                        // Bagi 60 dan bulatkan ke bawah untuk dapatkan angka Jam bulat
+                        $hours = (int) floor($totalMinutes / 60);
+                        
+                        // Sisa bagi (modulus) 60 untuk dapatkan sisa Menit
+                        $minutes = $totalMinutes % 60;
+                        
+                        $durasiString = $hours . ' jam ' . $minutes . ' menit';
+                    }
+                @endphp
             <tr>
-                <td>{{ $ticket->ticket_number }}</td>
-                <td>{{ $ticket->created_at->format('d/m/Y') }}</td>
-                <td>{{ $ticket->user->name }} ({{ $ticket->department->name }})</td>
+                <td>{{ $createdAt->format('d/m/Y H:i') }} WIB</td>
+                <td>{{ $ticket->user->name }}<br><span style="font-size: 9px; color: #555;">({{ $ticket->department->name }})</span></td>
                 <td>{{ $ticket->subject }}</td>
                 <td>
-                    @if($ticket->assignments->isNotEmpty())
-                        {{ $ticket->assignments->first()->teknisi->name }}
-                    @else
-                        -
-                    @endif
+                    {{ $assignment ? $assignment->teknisi->name : '-' }}
+                </td>
+                <td>
+                    {{ $startedAt ? $startedAt->format('d/m/Y H:i') . ' WIB' : '-' }}
+                </td>
+                <td>
+                    {{ $completedAt ? $completedAt->format('d/m/Y H:i') . ' WIB' : '-' }}
+                </td>
+                <td>
+                    <strong>{{ $durasiString }}</strong>
                 </td>
             </tr>
             @endforeach
@@ -97,7 +127,7 @@
     </table>
 
     <div style="margin-top: 30px; text-align: right;">
-        <p>Dicetak pada: {{ $generated_at }}</p>
+        <p>Dicetak pada: {{ \Carbon\Carbon::parse($generated_at)->format('d F Y, H:i') }} WIB</p>
         <br><br><br>
         <p>(_______________________)</p>
         <p>Admin IT RSUD dr. Soedarso</p>

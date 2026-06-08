@@ -39,9 +39,12 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Tingkat Prioritas</label>
                                 <select name="priority" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                    <option value="Low">Rendah (Bisa ditunda)</option>
-                                    <option value="Medium" {{ (old('priority', $ticket->priority) == 'Medium') ? 'selected' : '' }}>Sedang (Mengganggu kerja)</option>
-                                    <option value="High">Tinggi (Sistem lumpuh total)</option>
+                                    <option value="">-- Pilih Prioritas --</option>
+                                    @foreach($priorities as $priority)
+                                        <option value="{{ $priority }}" {{ (old('priority', $ticket->priority) == $priority) ? 'selected' : '' }}>
+                                            {{ $priority }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div>
